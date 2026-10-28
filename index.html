@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>蛊真人</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ 开始页：方源重生背景 ============ -->
+<div class="screen home" id="screen-start">
+  <div class="title">
+    <svg class="main" fill="currentColor" viewBox="0 0 31 15"><text font-size="10" style="transform: translate(50%, 50%); text-anchor: middle; dominant-baseline: central;">蛊真人</text></svg>
+    <svg class="sub" fill="currentColor" viewBox="0 0 120 15"><text font-size="10" style="transform: translate(50%, 50%); text-anchor: middle; dominant-baseline: central;">炼蛊炼人还炼天</text></svg>
+  </div>
+  <div style="color:var(--g0);line-height:1.9;text-align:center;max-width:36rem">
+    你从五百年后重生，这一世，你将随机降生于五域之一。<br>
+    前世你是炼天魔尊，这一世，你带着六转仙蛊「春秋蝉」重活一世，<br>
+    誓要挣脱命运的束缚。
+  </div>
+  <div class="controls"><div><button class="primary focus" onclick="startNew()">开始</button></div></div>
+</div>
+
+<!-- ============ 蛊虫选择 ============ -->
+<div class="screen hidden" id="screen-gupick">
+  <div class="sec">选一只初始蛊虫</div>
+  <div style="color:var(--g0);font-size:.9rem">你已拥有六转仙蛊「春秋蝉」，请从下列五只一转蛊虫中选一只作为起步蛊。</div>
+  <div id="guList"></div>
+</div>
+
+<!-- ============ 加点 ============ -->
+<div class="screen hidden" id="screen-alloc">
+  <div class="sec">分配属性</div>
+  <div class="alloc" id="allocPanel"></div>
+  <div class="controls" style="width:100%;justify-content:center;gap:.5rem">
+    <button class="secondary" onclick="randomAlloc()">随机分配</button>
+    <button class="primary" id="btnStart" onclick="startLife()">开始修炼</button>
+  </div>
+</div>
+
+<!-- ============ 初始界面（剧情页）：左侧状态栏，中间日志+控制，右侧属性圆环 ============ -->
+<div class="screen play hidden" id="screen-play">
+  <div class="play-left">
+    <div id="status"></div>
+  </div>
+  <div class="play-main">
+    <ul class="logs" id="log"></ul>
+    <div class="controls" style="width:100%">
+      <button id="btnPause">⏸ 暂停</button>
+      <button id="btn1x" class="active">1x</button>
+      <button id="btn2x">2x</button>
+      <button id="btn4x">4x</button>
+      <button id="btnNext" class="primary">下一步</button>
+    </div>
+  </div>
+  <div class="play-side">
+    <ul class="attr-circles" id="attrs"></ul>
+  </div>
+</div>
+
+<!-- ============ 蛊虫仓库（5×6 网格） ============ -->
+<div class="overlay hidden" id="warehouse">
+  <div class="warehouse-panel">
+    <div class="sec">蛊虫仓库</div>
+    <div class="controls warehouse-nav" style="align-items:center">
+      <button id="warehousePrev" onclick="warehousePrev()">上一页</button>
+      <span class="font-mono" id="warehousePage"></span>
+      <button id="warehouseNext" onclick="warehouseNext()">下一页</button>
+      <button onclick="closeWarehouse()">关闭</button>
+    </div>
+    <div class="warehouse-grid" id="warehouseGrid"></div>
+    <div id="warehouseFood"></div>
+    <div id="warehouseRecipes"></div>
+  </div>
+</div>
+
+<!-- ============ 死亡抉择 / 继承面板（重生系统） ============ -->
+<div class="overlay hidden" id="deathPanel">
+  <div class="warehouse-panel" id="deathContent"></div>
+</div>
+
+<!-- 脚本按依赖顺序加载 -->
+<script src="engine/rng.js"></script>
+<script src="data/gu.js"></script>
+<script src="data/food.js"></script>
+<script src="data/recipes.js"></script>
+<script src="data/regions.js"></script>
+<script src="data/aptitude.js"></script>
+<script src="data/ranks.js"></script>
+<script src="data/essence.js"></script>
+<script src="data/cultivation.js"></script>
+<script src="data/events.js"></script>
+<script src="data/choices.js"></script>
+<script src="data/m3.js"></script>
+<script src="engine/property.js"></script>
+<script src="engine/gu.js"></script>
+<script src="engine/events.js"></script>
+<script src="engine/cultivation.js"></script>
+<script src="engine/condition.js"></script>
+<script src="engine/life.js"></script>
+<script src="engine/rebirth.js"></script>
+<script src="engine/ending.js"></script>
+<script src="save.js"></script>
+
+<script>
+$('btnPause').onclick = togglePause;
+$('btnNext').onclick = nextStep;
+$('btn1x').onclick = () => setSpeed(800, 'btn1x');
+$('btn2x').onclick = () => setSpeed(400, 'btn2x');
+$('btn4x').onclick = () => setSpeed(180, 'btn4x');
+
+$('log').addEventListener('click', (e) => {
+  if (e.target.closest('.choice-buttons')) return;
+  nextStep();
+});
+
+renderAttrs();
+updateControls();
+
+// 测试用：控制条常驻「测试死亡」按钮，方便验证重生流程（正式发布前可移除）
+{
+  const dbg = document.createElement('button');
+  dbg.textContent = '测试死亡';
+  dbg.onclick = () => endGame('（调试）寿元已尽。', '寿终');
+  dbg.style.color = 'var(--color-error)';
+  $('btnPause').parentElement.appendChild(dbg);
+}
+
+// 若有本世存档，首页显示「继续上一世」
+if (hasSave()){
+  const d = document.createElement('div');
+  const cont = document.createElement('button');
+  cont.className = 'primary';
+  cont.textContent = '继续上一世';
+  cont.onclick = continueGame;
+  d.appendChild(cont);
+  document.querySelector('#screen-start .controls').appendChild(d);
+}
+</script>
+</body>
+</html>

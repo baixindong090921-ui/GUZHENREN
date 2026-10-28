@@ -1,0 +1,208 @@
+/* ============================================================
+   LifeRestart2 · 样式（视觉移植自原版）
+   ============================================================ */
+:root{
+  --base-text-color:#f9fafb;
+  --base-background-color:#121314;
+  --g0:#f9fafb; --g1:#afe3ff; --g2:#e09eff; --g3:#ffe48d;
+  --color-success:#b9ff69; --color-error:#ff6969; --color-primary:var(--color-success);
+}
+/* 浅色主题（点右上角 ☀ 切换） */
+html.light{
+  --base-text-color:#121314;
+  --base-background-color:#f7f7f7;
+  --g0:#4e5052; --g1:#4aa8da; --g2:#b03fe4; --g3:#ffaf2d;
+  --color-success:#61b700; --color-error:#e42b2b; --color-primary:var(--color-success);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{
+  -webkit-font-smoothing:antialiased;
+  font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","PingFang SC","Noto Sans SC","Noto Sans CJK SC","Noto Sans","Microsoft YaHei","Helvetica Neue",Helvetica,Arial,sans-serif;
+  background:var(--base-background-color);color:var(--base-text-color);
+}
+body{display:grid;place-items:center;min-height:100vh;padding:1rem}
+ul{margin:0;padding:0;list-style:none}
+.screen{width:min(100dvw - 2rem,48rem);display:flex;flex-direction:column;gap:1rem;align-items:center}
+.hidden{display:none !important}
+
+button{
+  --style-color:var(--base-text-color);
+  color:var(--style-color);background:var(--base-background-color);
+  border:.0625rem solid var(--style-color);box-sizing:border-box;
+  height:2.5rem;padding:0 1rem;font-size:1.05rem;font-weight:700;
+  cursor:pointer;-webkit-user-select:none;user-select:none;
+  display:inline-flex;justify-content:center;align-items:center;
+  transition:all .2s ease-in-out;font-family:inherit;
+}
+button:hover{background:var(--style-color);color:var(--base-background-color)}
+button.primary{--style-color:var(--color-primary)}
+button.secondary{--style-color:var(--g1)}
+button.error{--style-color:var(--color-error)}
+button.focus{height:3.5rem;font-size:1.4rem}
+button.active{background:var(--style-color);color:var(--base-background-color)}
+button:disabled{opacity:.3;cursor:not-allowed}
+.font-mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace}
+
+/* 标题条 */
+.sec{width:100%;height:2.4rem;border:.0625rem solid var(--base-text-color);border-bottom:.1875rem solid var(--color-primary);display:flex;justify-content:center;align-items:center;font-weight:700}
+
+/* 首页 */
+.home{justify-content:center;gap:5rem;min-height:70vh}
+.home .title{display:flex;flex-direction:column;justify-content:center;align-items:center;width:100%}
+.home .title svg{width:100%;height:auto;display:block}
+.home .title .main{font-weight:700}
+.home .title .sub{opacity:.55}
+.home .controls{width:100%;display:flex;flex-direction:column;gap:.5rem;justify-content:center}
+.home .controls>div{display:flex;justify-content:center}
+.home .actions{position:fixed;bottom:1rem;right:1rem;display:flex;width:auto}
+.home .actions button{width:2.5rem;height:2.5rem;padding:.25rem;border-radius:0}
+
+/* 天赋卡片 */
+.talent-list{gap:.5rem;flex-direction:column;display:flex;width:100%}
+.talent-list>li{display:flex;justify-content:center;align-items:center;gap:1rem}
+.talent-list>li .talent{width:100%}
+.talent{
+  --grade-color:var(--g0);
+  color:var(--grade-color);background:var(--base-background-color);
+  cursor:pointer;border:.0625rem solid var(--grade-color);box-sizing:border-box;
+  justify-content:space-between;align-items:center;gap:1rem;padding:0 1rem;
+  min-height:2.5rem;transition:all .2s ease-in-out;display:flex;
+}
+.talent .talent-name{font-weight:700}
+.talent .talent-description{font-size:.85rem;opacity:.8}
+.talent .talent-description:before{content:"[";margin-right:.125rem}
+.talent .talent-description:after{content:"]";margin-left:.125rem}
+.talent.selected{background:var(--grade-color)}
+.talent.selected .talent-name,.talent.selected .talent-description{color:var(--base-background-color)}
+
+/* 加点 */
+.screen.point-allocation{flex-direction:column;justify-content:center;align-items:center;gap:1rem;width:100%}
+.alloc{width:100%;flex-direction:row;justify-content:center;gap:.5rem;display:flex;align-items:stretch}
+.alloc>li{flex-direction:column;flex:1 0;justify-content:center;align-items:center;display:flex}
+.alloc>li>span.name{
+  width:100%;height:2.2rem;color:var(--base-background-color);background:var(--grade-color);
+  border:.0625rem solid var(--grade-color);box-sizing:border-box;border-bottom:none;
+  display:flex;justify-content:center;align-items:center;font-weight:700;
+}
+.alloc>li.left>span.name{background:var(--left-color);border-color:var(--left-color)}
+.alloc>li.left{--left-color:var(--color-error)}
+.alloc>li.left.left-0{--left-color:var(--color-primary)}
+.alloc>li.left>button{
+  --style-color:var(--left-color);width:100%;height:2.2rem;padding:0;font-size:1.2rem;
+  border:.0625rem solid var(--left-color);border-top:none;border-radius:0;
+}
+.allocation-input{width:100%;height:2.2rem;border:.0625rem solid var(--grade-color);display:flex;align-items:stretch}
+.allocation-input button{flex:1;height:100%;padding:0;border:none;--style-color:var(--grade-color)}
+.allocation-input input{
+  width:2.5rem;flex:1;height:100%;text-align:center;background:var(--base-background-color);
+  color:var(--grade-color);border:none;font-weight:700;font-size:1.1rem;
+  font-variant-numeric:tabular-nums;-moz-appearance:textfield;appearance:textfield;
+}
+.allocation-input input::-webkit-outer-spin-button,.allocation-input input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+
+/* 人生阶段 */
+header{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap;width:100%}
+.controls{display:flex;gap:.5rem}
+.properties{display:flex;flex-direction:row;gap:.5rem;width:100%}
+.properties>li{--grade-color:var(--g0);text-align:center;min-width:5rem;flex:1 0;display:flex;flex-direction:column}
+.properties .name{color:var(--base-background-color);background:var(--grade-color);
+  height:2rem;display:flex;justify-content:center;align-items:center;
+  border:.0625rem solid var(--grade-color);font-weight:700}
+.properties .value{height:2rem;display:flex;justify-content:center;align-items:center;
+  border:.0625rem solid var(--grade-color);border-top:none;color:var(--grade-color);font-weight:700;
+  font-variant-numeric:tabular-nums}
+/* 初始界面（剧情页）：左侧状态栏，中间日志+控制，右侧属性圆环 */
+.screen.play{height:calc(100dvh - 2rem);flex-direction:row;align-items:stretch}
+.play-left{width:150px;display:flex;flex-direction:column;gap:1.2rem;justify-content:center;flex-shrink:0}
+.play-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:.5rem}
+.play-side{width:130px;display:flex;flex-direction:column;justify-content:center;flex-shrink:0}
+.attr-circles{display:flex;flex-direction:column;gap:1rem;align-items:center}
+.attr-circle{width:100px;cursor:pointer}
+.attr-circle svg{width:100%;height:auto;display:block}
+.attr-circle .attr-label{fill:var(--base-text-color);font-size:12px;font-weight:700}
+
+/* 左侧状态栏：血条/真元/体力 横向进度条 */
+.status-date{font-size:1rem;font-weight:700;color:var(--g3);margin-bottom:.4rem}
+.status-bar{display:flex;flex-direction:column;gap:.25rem}
+.status-name{font-size:.85rem;font-weight:700}
+.status-money{font-variant-numeric:tabular-nums;color:var(--g3)}
+.bar{height:.7rem;border:.0625rem solid var(--base-text-color);box-sizing:border-box;background:var(--base-background-color)}
+.bar-fill{height:100%;background:var(--g1);transition:width .3s}
+.realm{font-size:.95rem;font-weight:800;color:var(--g2);margin-bottom:.2rem}
+.realm-essence{font-size:.8rem;color:var(--g1);margin-bottom:.3rem}
+.realm-off{color:var(--g0);opacity:.5}
+.realm-cult{display:flex;align-items:center;gap:.4rem;margin-bottom:.3rem}
+.realm-cult .bar{flex:1}
+.pips{display:flex;gap:2px;align-items:center}
+.pip{width:.5rem;height:.5rem;border:.0625rem solid var(--base-text-color);transform:rotate(45deg);box-sizing:border-box}
+.pip.on{background:var(--g3);border-color:var(--g3)}
+.status-empty{font-size:.8rem;color:var(--g0);opacity:.5}
+
+/* 蛊虫圆形图标（点击打开仓库） */
+.gu-icon{width:76px;cursor:pointer;text-align:center;margin-top:.5rem}
+.gu-icon svg{width:100%;height:auto;display:block}
+.gu-icon-name{font-size:.8rem;font-weight:700;margin-top:.25rem}
+
+/* 重生继承面板 */
+.inherit-list{display:flex;flex-direction:column;gap:.5rem;width:100%}
+.inherit-item{display:flex;flex-direction:column;gap:.35rem;border:.0625rem solid var(--base-text-color);padding:.6rem;cursor:pointer}
+.inherit-item.disabled{opacity:.45;cursor:not-allowed}
+.inherit-head{display:flex;align-items:center;gap:.4rem;font-weight:700}
+.inherit-preview{color:var(--g1);font-size:.85rem}
+.inherit-cost{color:var(--color-error);font-size:.8rem}
+.inherit-item select{background:var(--base-background-color);color:var(--base-text-color);border:.0625rem solid var(--base-text-color);padding:.25rem;font-family:inherit}
+
+/* 蛊虫仓库弹窗（5×6 网格） */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);display:flex;align-items:center;justify-content:center;z-index:10;padding:1rem}
+.warehouse-panel{background:var(--base-background-color);border:.0625rem solid var(--base-text-color);border-radius:.5rem;width:min(900px,100%);max-height:90vh;overflow-y:auto;padding:1rem;display:flex;flex-direction:column;gap:1rem;align-items:center}
+.warehouse-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:.5rem;width:100%}
+.warehouse-nav{position:sticky;top:0;z-index:2;background:var(--base-background-color);padding:.35rem;width:100%;justify-content:center}
+.gu-cell{display:flex;flex-direction:column;align-items:center;gap:.25rem;border:.0625rem solid var(--base-text-color);padding:.4rem;box-sizing:border-box;min-width:0}
+.gu-cell small{font-size:.65rem;text-align:center;overflow-wrap:anywhere}
+.gu-cell button{font-size:.65rem;padding:.2rem .3rem}
+#warehouseFood,#warehouseRecipes{width:100%;border-top:1px solid var(--base-text-color);padding-top:.5rem}
+.m4-row,.m4-recipe{display:flex;gap:.5rem;justify-content:space-between;align-items:center;padding:.25rem 0;border-bottom:1px solid var(--g0);flex-wrap:wrap}
+.m4-recipe small{color:var(--g0)}
+@media(max-width:650px){.warehouse-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.warehouse-panel{padding:.5rem}.gu-cell-img{width:28px;height:28px}}
+.gu-cell-img{width:44px;height:44px;border-radius:50%;border:.0625rem dashed var(--base-text-color)}
+.gu-cell.filled .gu-cell-img{background:var(--g1);border-style:solid}
+.gu-cell-name{font-size:.7rem;text-align:center;min-height:1em}
+.logs{
+  border:.0625rem solid var(--base-text-color);box-sizing:border-box;
+  flex:1 0;width:100%;height:100%;padding:0 .5rem;
+  display:flex;flex-direction:column;overflow-y:auto;
+  scrollbar-width:none;gap:0;
+}
+.logs::-webkit-scrollbar{display:none}
+.logs .log{
+  -webkit-user-select:none;user-select:none;cursor:pointer;
+  flex-direction:row;gap:.5rem;width:100%;line-height:2rem;display:flex;
+}
+.logs .log .age{
+  text-align:right;width:6.5rem;height:2rem;color:var(--color-primary);
+  box-sizing:border-box;flex-shrink:0;font-weight:700;font-variant-numeric:tabular-nums;
+}
+.logs .log .content{position:relative;flex:1}
+/* 每条日志下方的横线（左+下边框组成的 L 形线条） */
+.logs .log .content:before{
+  content:"";border:.0625rem solid var(--base-text-color);box-sizing:border-box;
+  pointer-events:none;border-top:none;border-right:none;
+  width:calc(100% + .5rem);height:calc(100% - 2rem);
+  position:absolute;bottom:0;left:-.5rem;
+}
+.logs .log:last-child{margin-bottom:1rem}
+.choice-q{color:var(--g3);font-weight:700}
+.choice-memory{color:var(--g1);font-style:italic}
+.choice-buttons{display:flex;flex-direction:column;gap:.5rem;padding:.4rem 0 .4rem 7rem}
+.choice-buttons button{width:100%;text-align:left;justify-content:flex-start}
+.choice-picked{color:var(--g1);font-weight:700}
+.death{color:var(--color-error);font-weight:700}
+.empty{color:var(--g0);opacity:.5;text-align:center;padding:2rem 0}
+
+.summary{border:.0625rem solid var(--base-text-color);box-sizing:border-box;
+  text-align:center;padding:1.5rem;display:flex;flex-direction:column;gap:.5rem;width:100%}
+.summary .grade{font-size:3rem;font-weight:800;color:var(--g3)}
+.summary .title{font-size:1.2rem;font-weight:700}
+.summary .detail{color:var(--g0);font-size:.95rem;line-height:1.7}
+.summary .achv{color:var(--g3);font-size:.95rem;font-weight:700;line-height:1.7}
+.summary button{margin:.5rem auto 0}
