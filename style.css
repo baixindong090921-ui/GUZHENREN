@@ -24,6 +24,50 @@ body{display:grid;place-items:center;min-height:100vh;padding:1rem}
 ul{margin:0;padding:0;list-style:none}
 .screen{width:min(100dvw - 2rem,48rem);display:flex;flex-direction:column;gap:1rem;align-items:center}
 .hidden{display:none !important}
+.battle-screen{width:min(100%,76rem);align-items:stretch;padding:1rem 0}
+#battleContent{display:flex;flex-direction:column;gap:1rem;min-width:0;line-height:1.65}
+.battle-header,.battle-actions{display:flex;flex-wrap:wrap;justify-content:space-between;gap:.75rem;align-items:center}
+.battle-header{border-bottom:1px solid var(--g3);padding-bottom:1rem}
+.battle-header h1{color:var(--g3)}
+.battle-columns{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+.battle-card{border:1px solid color-mix(in srgb,var(--g0) 30%,transparent);padding:1rem;min-width:0}
+.battle-gu-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.8rem}
+.battle-gu-grid .battle-card{display:flex;flex-direction:column;gap:.5rem}
+.battle-gu-grid button{margin-top:auto}
+.battle-actions{justify-content:flex-start}
+.battle-screen button{height:auto;min-height:2.5rem;padding:.6rem .8rem;white-space:normal;font-size:.95rem;line-height:1.5;max-width:100%}
+.battle-intent{color:var(--g3);margin-top:.8rem}
+.battle-danger{border:1px solid var(--color-error);padding:.8rem;color:var(--color-error)}
+.battle-note{opacity:.7;font-size:.85rem}
+.battle-log{padding:1rem 1rem 1rem 2rem;max-height:18rem;overflow:auto;border-top:1px solid var(--g0)}
+@media(max-width:720px){.battle-columns,.battle-gu-grid{grid-template-columns:1fr}.battle-header{align-items:flex-start;flex-direction:column}.battle-actions{align-items:stretch;flex-direction:column}}
+
+/* 宝黄天独立页面，与仓库共用字体、颜色；宽屏四列，窄屏自动收缩。 */
+.shop-screen{width:min(100%,76rem);align-items:stretch;padding:1.5rem 0;gap:1.2rem}
+.shop-header{display:flex;align-items:center;justify-content:space-between;gap:1rem;border-bottom:1px solid var(--g3);padding-bottom:1.4rem}
+.shop-header h1{font-size:2.4rem;letter-spacing:.12em;margin:.3rem 0 .7rem;color:var(--g3)}
+.shop-eyebrow,.shop-footnote{font-size:.85rem;opacity:.7;line-height:1.7}
+.shop-header-actions,.shop-grades,.shop-categories,.shop-pagination{display:flex;flex-wrap:wrap;gap:.65rem;align-items:center}
+.shop-grades button{--style-color:var(--g3);min-width:8rem;height:3rem}
+.shop-categories button{font-size:.95rem}
+.shop-message{min-height:1.5em;line-height:1.6;color:var(--color-success)}
+.shop-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:1rem}
+.shop-card{display:flex;flex-direction:column;gap:.7rem;border:1px solid color-mix(in srgb,var(--base-text-color) 25%,transparent);padding:1rem;min-width:0}
+.shop-card h2{font-size:1.15rem;line-height:1.4}
+.shop-card-kind{font-size:.8rem;color:var(--g1)}
+.shop-desc{font-size:.85rem;line-height:1.65;opacity:.75;flex:1}
+.shop-price{color:var(--g3);font-size:1.15rem;font-weight:700}
+.shop-price small{font-size:.8rem;font-weight:400}
+.shop-buy{display:flex;flex-direction:column;gap:.6rem}
+.shop-buy label{font-size:.9rem;display:flex;align-items:center;gap:.6rem}
+.shop-buy select{background:var(--base-background-color);color:var(--base-text-color);padding:.3rem;font:inherit;border:1px solid var(--g0)}
+.shop-buy button{height:auto;min-height:2.5rem;font-size:.9rem;padding:.5rem;white-space:normal}
+.shop-pagination{justify-content:center}
+.shop-stock-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:1rem;margin:.8rem 0}
+#warehouseShopStock{width:100%;line-height:1.7}
+@media(max-width:1000px){.shop-grid{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:720px){.shop-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.shop-header{align-items:flex-start;flex-direction:column}.shop-screen{padding:.5rem 0}.shop-card{padding:.8rem}}
+@media(max-width:340px){.shop-grid{grid-template-columns:1fr}}
 
 button{
   --style-color:var(--base-text-color);
@@ -206,3 +250,84 @@ header{display:flex;align-items:center;justify-content:space-between;gap:1rem;fl
 .summary .detail{color:var(--g0);font-size:.95rem;line-height:1.7}
 .summary .achv{color:var(--g3);font-size:.95rem;font-weight:700;line-height:1.7}
 .summary button{margin:.5rem auto 0}
+
+.activity-actions{display:flex;flex-wrap:wrap;gap:.5rem;margin:.5rem 0}.forge-inputs{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.5rem;max-height:40vh;overflow:auto;margin:1rem 0}#activityContent,#battleContent{align-items:stretch;line-height:1.7}#saveNotice{border:1px solid var(--color-error);padding:.5rem;color:var(--color-error)}select{font:inherit;max-width:100%;padding:.3rem}.activity-actions button{height:auto;min-height:2.5rem} @media(max-width:650px){.forge-inputs{grid-template-columns:1fr}}
+@media(max-width:650px){
+  .screen.play{height:auto;min-height:calc(100dvh - 2rem);flex-direction:column;gap:1rem}
+  .play-left,.play-main,.play-side{width:100%;min-width:0}
+  #status{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.65rem;overflow-wrap:anywhere}
+  .play-main{min-height:60vh}.logs{height:45vh;flex:auto}
+  .attr-circles{flex-direction:row;flex-wrap:wrap;justify-content:center;gap:.4rem}
+  .attr-circle{width:55px}.controls{flex-wrap:wrap;gap:.3rem}
+  .warehouse-nav{flex-wrap:wrap}.warehouse-nav button{padding:0 .5rem}
+  .talent{flex-wrap:wrap;padding:.5rem}.alloc.classic{flex-wrap:wrap}
+}
+
+/* 炼蛊坊：独立页面，库存、炼炉、配方各有固定位置。 */
+.forge-screen{
+  --forge-line:color-mix(in srgb,var(--base-text-color) 25%,transparent);
+  width:min(100%,90rem);min-width:0;align-items:stretch;padding:1.5rem 0;line-height:1.65;
+}
+.forge-header{align-items:flex-start;border-bottom:1px solid var(--g3);padding-bottom:1.2rem}
+.forge-header h1{font-size:2.4rem;letter-spacing:.12em;color:var(--g3);margin:.25rem 0 .65rem}
+.forge-header p{overflow-wrap:anywhere}
+#forgeBalance{font-variant-numeric:tabular-nums}
+.forge-actions,.forge-tabs{display:flex;flex-wrap:wrap;align-items:center;gap:.5rem}
+.forge-screen button{height:auto;min-height:2.5rem;max-width:100%;padding:.5rem .75rem;font-size:.95rem;line-height:1.4;white-space:normal;overflow-wrap:anywhere}
+.forge-screen button:focus-visible,.forge-screen input:focus-visible,.forge-screen select:focus-visible{outline:2px solid var(--g1);outline-offset:3px}
+.forge-tabs{margin:.6rem 0}
+.forge-tabs button[aria-pressed="true"]{background:var(--base-text-color);color:var(--base-background-color)}
+.forge-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.2fr) minmax(0,1fr);align-items:start;gap:1rem;min-width:0}
+.forge-inventory,.forge-furnace,.forge-recipes{min-width:0;padding:1rem;border:1px solid var(--forge-line);display:flex;flex-direction:column;gap:.8rem}
+.forge-furnace{border-top:3px solid var(--g3)}
+.forge-layout h2{font-size:1.2rem;line-height:1.5}
+.forge-layout h3{font-size:1rem;line-height:1.5}
+.forge-search,.forge-screen select,.forge-qty input[type="number"]{
+  min-width:0;max-width:100%;min-height:2.5rem;border:1px solid var(--forge-line);
+  background:var(--base-background-color);color:var(--base-text-color);padding:.45rem .6rem;font:inherit;
+}
+.forge-search{width:100%}
+.forge-screen select{width:100%}
+.forge-qty{display:flex;align-items:center;flex-wrap:wrap;gap:.4rem;font-size:.9rem}
+.forge-qty input[type="number"]{width:5rem;font-variant-numeric:tabular-nums}
+.forge-list{display:flex;flex-direction:column;gap:.6rem;min-width:0}
+#forgeInventory{max-height:62vh;max-height:62dvh;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable;padding-right:.3rem}
+.forge-card{border:1px solid var(--forge-line);padding:.75rem;min-width:0;overflow-wrap:anywhere}
+.forge-card+.forge-card{margin-top:.6rem}
+.forge-item{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.6rem;border-bottom:1px solid var(--forge-line);padding:.65rem 0;min-width:0}
+.forge-item:last-child{border-bottom:0}
+.forge-item-info{min-width:0;flex:1 1 8rem;overflow-wrap:anywhere}
+.forge-item-info small{display:block;font-size:.8rem;line-height:1.55}
+.forge-item input[type="checkbox"]{width:1.1rem;height:1.1rem;accent-color:var(--color-primary);flex-shrink:0}
+.forge-item label{min-width:0;overflow-wrap:anywhere}
+.forge-item button{flex-shrink:0}
+.forge-badge{display:inline-block;border:1px solid currentColor;padding:.05rem .35rem;font-size:.75rem;line-height:1.6;color:var(--g1);margin:.15rem .2rem .15rem 0}
+.forge-hint{font-size:.85rem;opacity:.8;line-height:1.7;overflow-wrap:anywhere}
+.forge-preview{padding:.75rem;border:1px solid var(--forge-line);font-size:.9rem;font-variant-numeric:tabular-nums}
+.forge-preview p+p{margin-top:.4rem}
+.forge-warning{color:var(--color-error);border-left:3px solid currentColor;padding:.55rem .7rem;background:color-mix(in srgb,var(--color-error) 6%,var(--base-background-color));font-size:.9rem;overflow-wrap:anywhere}
+.forge-confirm{border:2px solid var(--g3);padding:.9rem;display:flex;flex-direction:column;gap:.75rem;scroll-margin-top:1rem}
+.forge-confirm .forge-actions{margin-top:.25rem}
+.forge-receipt{border:1px solid var(--g1);padding:.9rem;animation:forge-receipt-in .25s ease-out;overflow-wrap:anywhere;scroll-margin-top:1rem}
+.forge-receipt h3{color:var(--g1);margin-bottom:.5rem}
+.forge-receipt .forge-actions{margin-top:.75rem}
+.forge-screen #forgeInputs,.forge-screen #forgeRisk,.forge-screen #forgeRecipe,.forge-screen #forgeResult,.forge-screen #forgeConfirm{min-width:0;overflow-wrap:anywhere}
+.forge-screen #forgeInputs{display:flex;flex-direction:column;gap:.4rem;max-height:24rem;overflow:auto}
+#forgeMessage{min-height:1.7em;color:var(--g1);font-size:.95rem;overflow-wrap:anywhere}
+@keyframes forge-receipt-in{from{opacity:.2;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
+@media(max-width:1050px){
+  .forge-layout{grid-template-columns:minmax(0,1fr) minmax(0,1.2fr)}
+  .forge-recipes{grid-column:1 / -1}
+}
+@media(max-width:720px){
+  .forge-screen{padding:.5rem 0}
+  .forge-header{flex-direction:column;gap:.8rem}
+  .forge-header h1{font-size:2rem}
+  .forge-layout{display:flex;flex-direction:column;gap:.8rem}
+  .forge-inventory,.forge-furnace,.forge-recipes{width:100%;padding:.85rem}
+  .forge-furnace{order:0}.forge-recipes{order:1}.forge-inventory{order:2}
+  #forgeInventory{max-height:55vh;max-height:55dvh}
+  .forge-header>.forge-actions{width:100%}
+  .forge-confirm .forge-actions button{flex:1 1 7rem}
+}
+@media(prefers-reduced-motion:reduce){.forge-receipt{animation:none}.forge-screen button{transition:none}}

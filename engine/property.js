@@ -28,6 +28,8 @@ const state = {
   region: '', 资质: null, alive: true,
   gu: new Set(), flags: new Set(), fired: new Set(),
   guItems: [], guSeq: 0, unknownGu: [], seenGu: new Set(), foodStock: {}, materialStock: {}, lastFeedMonth: null,
+  m4ExploreDay: null, m4CaptureYear: null, m4CaptureCount: 0,
+  m4MarketMonth: null, m4MarketIds: [], m4MarketBought: [], m4Strength: {black:0,white:0},
 };
 
 let showValueMode = new Set();
@@ -76,6 +78,9 @@ function applyMoneyDelta(delta){
 }
 
 /* 应用效果：三类 key —— 属性(整数点数) / 资源(占上限比例,|v|≤1) / 修炼(修炼日) */
+function choiceCostReady(cost){
+  return Object.entries(cost||{}).every(([k,v])=>v>=0 || (k==='元石'?state.money>=-v:k in state.resourceMax?state.resources[k]>=-v*state.resourceMax[k]:true));
+}
 function applyEffect(effect){
   for (const [k, v] of Object.entries(effect || {})){
     if (k in state.attrs){
@@ -165,6 +170,7 @@ function renderStatus(){
     html += `<div class="status-bar"><div class="status-name">供养</div><div class="status-money">${state.guItems.filter(x=>x.active).length}/${M4.slots(state.attrs.家境)}</div></div>`;
   }
 
+  if(state.upgrade)html+='<div class="status-bar"><div class="status-name">魂魄</div><div>'+Math.ceil(state.upgrade.soul)+' / '+state.upgrade.soulMax+'</div></div>';
   // 蛊虫图标
   html += `<div class="gu-icon" onclick="openWarehouse()">
     <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="var(--g1)" stroke-width="5"/></svg>

@@ -166,6 +166,7 @@ function realmLabel(){
 
 /* 死亡判定：返回死亡原因（陨落/寿终）或 null */
 function checkDeath(){
+  if(state.upgrade && state.upgrade.soul<0)return '魂魄死亡';
   if (state.resources.血条 <= 0) return '陨落';
   if (state.age >= lifespan()) return '寿终';
   return null;

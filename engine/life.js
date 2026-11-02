@@ -5,7 +5,7 @@
    15岁：开窍大典 → 修炼 → 突破抉择 → 死亡 → 重生
    ============================================================ */
 
-const GAME = { IDLE:'idle', RUNNING:'running', CHOOSING:'choosing', ENDED:'ended' };
+const GAME = { IDLE:'idle', RUNNING:'running', CHOOSING:'choosing', ENDED:'ended', BATTLE:'battle' };
 let gameState = GAME.IDLE;
 let speed = 800, paused = false, timer = null;
 
@@ -15,12 +15,13 @@ let drawnGu = [], pickedGu = null;
 let alloc = {颜值:0, 体质:0, 智力:0, 家境:0, 运气:0};
 let totalPoints = 10, remainPoints = 10;
 let warehousePage = 0;
+let warehouseResumeTimer = false;
 
 const $ = id => document.getElementById(id);
 
 /* ---------- 屏幕切换 ---------- */
 function show(id){
-  ['screen-start','screen-gupick','screen-alloc','screen-play'].forEach(s => $(s).classList.add('hidden'));
+  ['screen-start','screen-gupick','screen-alloc','screen-play','screen-shop','screen-forge','battlePanel'].forEach(s => $(s)?.classList.add('hidden'));
   $(id).classList.remove('hidden');
 }
 
@@ -72,6 +73,7 @@ function initStateFromRebirth(rebirth){
   const cost = (rebirth && rebirth.freePointsCost) || 0;
   totalPoints = Math.max(0, 10 - cost);   // 继承越多，自由加点越少
   remainPoints = totalPoints;
+  if(typeof initUpgrade==='function') initUpgrade();
 }
 
 function startNew(rebirth){
@@ -186,6 +188,8 @@ function continueGame(){
   addLog('<span class="choice-picked">✦ 你从上次的进度继续。</span>');
   if (state.unknownGu.length) addLog('旧档中有未识别的蛊虫名称，已保留：'+state.unknownGu.map(escapeM4Text).join('、'));
   gameState = GAME.IDLE; paused = false;
+  if(typeof upgradeState==='function' && upgradeState().battle){gameState=GAME.BATTLE;paused=true;renderBattle();}
+  else if(typeof upgradeState==='function' && upgradeState().battleResult){paused=true;renderBattleResult();}
   updateControls();
 }
 
@@ -195,6 +199,7 @@ function 开窍大典(){
   startCultivation();   // rank=1、sub=0、cult=0，资源初始化
   addLog('<span class="choice-q">⚡ 十五岁，开窍大典！</span>');
   addLog('你开窍成功，获得了 <span class="choice-picked">' + state.资质.name + '</span> 资质（' + state.资质.desc + '）。');
+  addLog('开窍后可从上方进入历练、炼蛊、宝黄天及仓库；先将蛊加入供养，备好食物再催动。');
   addLog('真元「' + state.资质.真元 + '」占据空窍 ' + state.资质.ratio + '。');
 }
 
@@ -223,10 +228,10 @@ function fireChoice(e){
   gameState = GAME.CHOOSING;
   stopTimer();
   addLog('<span class="choice-q">⚡ ' + e.text + '</span>');
-  const memory = e.id ? getChoiceHistory(e.id) : null;
+  const memory = e.id ? (state.upgrade ? state.upgrade.priorChoices[e.id] : getChoiceHistory(e.id)) : null;
   if (memory){
     const escapeText = value => String(value || '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
-    addLog(`<span class="choice-memory">前世记忆：你曾选择“${escapeText(memory.optionText)}”——${escapeText(memory.summary)}</span>`);
+    addLog(`<span class="choice-memory">前世记忆：你曾选择“${escapeText(typeof remembered==='function'?remembered('event:'+e.id+':option',memory.optionText):memory.optionText)}”——${escapeText(typeof remembered==='function'?remembered('event:'+e.id+':result',memory.summary):memory.summary)}</span>`);
   }
   const box = document.createElement('div');
   box.className = 'choice-buttons';
@@ -245,12 +250,15 @@ function fireChoice(e){
     } else if (moneyCost > state.money){
       b.disabled = true;
       b.textContent += `（不足，当前 ${state.money}）`;
+    } else if (!choiceCostReady(opt.cost)){
+      b.disabled=true;b.textContent+='（资源不足）';
     } else if (opt.need && !opt.need(state)){
       b.disabled = true;
       b.textContent += '（' + (opt.needText || '条件不足') + '）';
     }
     b.onclick = () => {
       if (gameState !== GAME.CHOOSING) return;      // 已结算/死亡则忽略
+      if (!choiceCostReady(opt.cost)) return;
       if (moneyCost > state.money) return;         // 执行前再次检查元石
       if (opt.need && !opt.need(state)) return;     // 再次校验
       const currentWeights = opt.outcomes ? getOutcomeWeights(opt.outcomes) : null;
@@ -259,19 +267,21 @@ function fireChoice(e){
       markM3EventTriggered(e);                      // 先记触发与链进度，再结算结果
       if (opt.cost) applyEffect(opt.cost);          // 扣消耗
       // 掷结果
-      let effect = opt.effect, result = opt.result, flags = opt.flags, act = opt.act, gu = opt.gu;
+      let effect = opt.effect, result = opt.result, flags = opt.flags, act = opt.act, gu = opt.gu, guReward = opt.guReward, recipeReward=opt.recipeReward;
       let resultId = opt.resultId;
       if (opt.outcomes){
         let r = rng() * currentTotal;
         for (let i = 0; i < opt.outcomes.length; i++){
           const o = opt.outcomes[i];
           r -= currentWeights[i];
-          if (r <= 0){
+          if (currentWeights[i]>0 && r < 0){
             effect = o.effect ?? effect;
             result = o.result ?? result;
             flags = o.flags ?? flags;
             act = o.act ?? act;
             gu = o.gu ?? gu;
+            guReward = o.guReward ?? guReward;
+            recipeReward=o.recipeReward??recipeReward;
             resultId = o.id;
             break;
           }
@@ -279,13 +289,20 @@ function fireChoice(e){
       }
       applyEffect(effect);
       if (gu && isGuName(gu)) addGuItem(guByName(gu).id);
+      let rewardText = '';
+      if (guReward && guById(guReward.id) && Number.isInteger(guReward.count) && guReward.count>0 && guReward.count<=5){
+        for (let i=0;i<guReward.count;i++) addGuItem(guReward.id);
+        rewardText = '获得 '+escapeM4Text(guById(guReward.id).name)+'×'+guReward.count+'，已入仓库。';
+      }
+      if(recipeReward && typeof learnRecipe==='function' && learnRecipe(recipeReward))addLog('获得并补全了一张蛊方。');
       if (flags) flags.forEach(f => state.flags.add(f));
       box.remove();
       addLog('<span class="choice-picked">→ ' + opt.text + '</span>');
       if (result) addLog(result);
+      if (rewardText) addLog(rewardText);
       if (act) act();                                // 可执行任意逻辑（突破/死亡等）
       if (e.id && opt.id) recordChoiceHistory(e.id, opt.id, resultId, opt.text, result || opt.result || '已完成选择');
-      if (gameState === GAME.ENDED) return;          // act 里已 endGame（爆体/致命）
+      if (gameState === GAME.ENDED || gameState === GAME.BATTLE) return;          // act 里已 endGame（爆体/致命）
       const d = checkDeath();
       if (d){ endGame(d === '陨落' ? '你油尽灯枯，陨落了。' : '你寿元已尽。', d); return; }
       renderAttrs();
@@ -366,6 +383,7 @@ function stepChildhoodMonth(){
 }
 
 function stepDay(){
+  if(typeof upgradeState==='function' && upgradeState().battle) return true;
   if (!state.资质 && state.age < 15) return stepChildhoodMonth();
 
   const previousMonth=monthKey();
@@ -388,6 +406,8 @@ function stepDay(){
     return true;
   }
   if (r.ready){ fireChoice(buildBreakthroughEvent()); return true; }   // 突破优先，当天不再抽随机事件
+
+  if(typeof offerBattle==='function' && rng()<UPGRADE.battleChance){offerBattle();return true;}
 
   // 随机事件：抉择才打断推进，纯修炼/资源小事件只记日志、不打断
   if (rng() <= EVENT_RATE){
@@ -418,7 +438,7 @@ function advanceDay(){
   if (gameState === GAME.RUNNING) saveGame();
 }
 
-function resume(){ if (gameState === GAME.ENDED) return; gameState = GAME.RUNNING; updateControls(); startTimer(); }
+function resume(){ if (gameState === GAME.ENDED || gameState === GAME.BATTLE) return; gameState = GAME.RUNNING; updateControls(); startTimer(); }
 
 function togglePause(){
   if (gameState === GAME.ENDED) return;
@@ -429,7 +449,7 @@ function togglePause(){
 
 function nextStep(){
   if (gameState === GAME.ENDED) return;
-  if (gameState === GAME.IDLE){ resume(); return; }
+  if (gameState === GAME.IDLE){ paused=false;resume(); return; }
   stopTimer();
   if (gameState === GAME.RUNNING) advanceDay();
   if (gameState === GAME.RUNNING && !paused) startTimer();
@@ -445,19 +465,26 @@ function setSpeed(ms, id){
 function updateControls(){
   $('btnPause').textContent = paused ? '▶ 继续' : '⏸ 暂停';
   $('btnPause').classList.toggle('active', paused);
-  $('btnPause').disabled = (gameState === GAME.ENDED || gameState === GAME.CHOOSING);
-  $('btnNext').disabled = (gameState === GAME.ENDED || gameState === GAME.CHOOSING);
+  $('btnPause').disabled = (gameState === GAME.ENDED || gameState === GAME.CHOOSING || gameState === GAME.BATTLE);
+  $('btnNext').disabled = (gameState === GAME.ENDED || gameState === GAME.CHOOSING || gameState === GAME.BATTLE);
 }
 
 /* ============ 蛊虫仓库（5×6 网格，每页 30 格，超出翻页） ============ */
 const WAREHOUSE_PAGE_SIZE = 30;
 function openWarehouse(){
+  if(gameState===GAME.BATTLE || gameState===GAME.ENDED)return;
+  warehouseResumeTimer = gameState===GAME.RUNNING && !paused;
+  stopTimer();
   warehousePage = 0;
   renderWarehouse();
   $('warehouse').classList.remove('hidden');
 }
 function closeWarehouse(){
   $('warehouse').classList.add('hidden');
+  if(typeof renderShop==='function' && $('screen-shop')?.classList.contains?.('hidden')===false)renderShop();
+  if(typeof renderForge==='function' && $('screen-forge')?.classList.contains?.('hidden')===false)renderForge();
+  if (warehouseResumeTimer && gameState===GAME.RUNNING && !paused) startTimer();
+  warehouseResumeTimer = false;
 }
 function warehousePrev(){ if (warehousePage > 0){ warehousePage--; renderWarehouse(); } }
 function warehouseNext(){ warehousePage++; renderWarehouse(); }
@@ -476,7 +503,7 @@ function renderWarehouse(){
     html += `<div class="gu-cell${name ? ' filled' : ''}">
       <div class="gu-cell-img"></div>
       <div class="gu-cell-name">${escapeM4Text(name)}</div>
-      ${gu ? `<small>${gu.rank}转 · ${gu.流派}</small><small>${food ? '食物：'+food.name : '无普通食物'}</small><small>${item.active ? item.missed ? '饥饿' : '供养中' : '仓库中'}</small><button onclick="toggleGuFeeding(${item.uid})">${item.active ? '停止供养' : '加入供养'}</button>` : name ? '<small>旧档未识别，已保留</small>' : ''}
+      ${gu ? `<small>${gu.rank}转 · ${gu.流派}</small><small>${food ? '食物：'+food.name : (gu.id===60?'特殊喂养规则':'食物待核实，暂不结算')}</small><small>${item.active ? item.missed ? '饥饿' : '供养中' : '仓库中'}</small>${M4_EXTRA.uses[gu.id]?`<small>用途：${escapeM4Text(M4_EXTRA.uses[gu.id].title)}</small><button onclick="useGuAction(${gu.id},${item.uid})" ${m4ActionReady()&&item.active&&item.missed===0&&!item.locked&&canUseGuAction(gu.id)?'':'disabled'}>催动</button>`:''}<button onclick="toggleGuFeeding(${item.uid})">${item.active ? '停止供养' : '加入供养'}</button>` : name ? '<small>旧档未识别，已保留</small>' : ''}
     </div>`;
   }
   $('warehouseGrid').innerHTML = html;
@@ -484,4 +511,6 @@ function renderWarehouse(){
   $('warehousePrev').disabled = (warehousePage <= 0);
   $('warehouseNext').disabled = (warehousePage >= totalPages - 1);
   renderM4Panels();
+  if(typeof renderShopInventory==='function')renderShopInventory();
+
 }

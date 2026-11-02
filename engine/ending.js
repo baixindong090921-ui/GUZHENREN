@@ -10,7 +10,9 @@ function endGame(reason, endingType){
   state.alive = false;
   gameState = GAME.ENDED;
   stopTimer();
+  if(typeof upgradeState==='function'){upgradeState().battle=null;for(const id of ['activityPanel','battlePanel','warehouse'])$(id).classList.add('hidden');}
   clearSave();   // 死亡即作废本世存档，避免刷新后「继续上一世」读回濒死/上一世
+  show('screen-play');
   addLog(`<span class="death">☠ ${reason}</span>`);
   pendingDeath = { reason, endingType };
 

@@ -18,13 +18,17 @@ function getMeta(){
       m.图鉴 = m.图鉴 || { events:[], gu:[], endings:[] };
       if (typeof m.rebirths !== 'number') m.rebirths = 0;
       if (!m.choiceHistory || typeof m.choiceHistory !== 'object') m.choiceHistory = {};
+      if(!Array.isArray(m.recipes))m.recipes=[];
+      for(const key of ['events','gu','endings'])if(!Array.isArray(m.图鉴[key]))m.图鉴[key]=[];
+      if(typeof metaReadBlocked!=='undefined')metaReadBlocked=false;
       return m;
     }
-  } catch (e) {}
+  } catch (e) {if(typeof storageNotice==='function'){metaReadBlocked=true;storageNotice('前世存档损坏，已保护原始内容。');}}
   return { rebirths:0, 图鉴:{ events:[], gu:[], endings:[] }, choiceHistory:{} };
 }
 function saveMeta(meta){
-  try { localStorage.setItem(META_KEY, JSON.stringify(meta)); } catch (e) {}
+  if(typeof metaReadBlocked!=='undefined'&&metaReadBlocked)return false;
+  try {localStorage.setItem(META_KEY,JSON.stringify(meta));return true;}catch(e){if(typeof storageNotice==='function')storageNotice('前世知识保存失败，请检查浏览器存储。');return false;}
 }
 
 function getChoiceHistory(eventId){

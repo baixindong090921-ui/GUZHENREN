@@ -88,10 +88,16 @@ function validateEvents(){
     // 显式蛊虫引用有效
     if (e.gu !== undefined && !isGuName(e.gu)) problems.push(e.id + ' 无效 gu：' + e.gu);
     else if (e.gu !== undefined && GU.find(g => g.name === e.gu).rank !== 1) problems.push(e.id + ' M3 蛊虫事件必须引用一转蛊：' + e.gu);
+    const checkReward = (reward,label) => {
+      if (reward === undefined) return;
+      if (!reward || !GU.some(g=>g.id===reward.id) || !Number.isInteger(reward.count) || reward.count<1 || reward.count>5) problems.push(e.id+' 无效 '+label);
+    };
+    checkReward(e.guReward,'事件奖励');
 
     // 结果权重非负
     if (e.choices && e.choices.length < 2) problems.push(e.id + ' 抉择少于两个选项');
     for (const opt of (e.choices || [])){
+      checkReward(opt.guReward,'选择奖励');
       if (Object.keys(opt.effect || {}).some(key => Object.prototype.hasOwnProperty.call(M3.attrCoefs, key))) changesPermanentAttribute = true;
       if (!opt.id || choiceIds.has(opt.id)) problems.push(e.id + ' 选择 id 缺失或重复：' + opt.id);
       if (opt.id) choiceIds.add(opt.id);
@@ -101,6 +107,7 @@ function validateEvents(){
         resultIds.add(opt.resultId);
       }
       for (const o of (opt.outcomes || [])){
+        checkReward(o.guReward,'结果奖励');
         if (Object.keys(o.effect || {}).some(key => Object.prototype.hasOwnProperty.call(M3.attrCoefs, key))) changesPermanentAttribute = true;
         if (!o.id || resultIds.has(o.id)) problems.push(e.id + ' 结果 id 缺失或重复：' + o.id);
         if (o.id) resultIds.add(o.id);

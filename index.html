@@ -45,7 +45,7 @@
     <div id="status"></div>
   </div>
   <div class="play-main">
-    <ul class="logs" id="log"></ul>
+    <div id="saveNotice" class="hidden" role="alert"></div><div class="activity-actions"><button onclick="openActivities()">寻蛊与历练</button><button onclick="openActivities('forge')">炼蛊</button><button onclick="openActivities('infer')">推演</button><button onclick="openActivities('shop')">宝黄天</button><button onclick="openActivities('rest')">休养</button><button onclick="openWarehouse()">仓库与供养</button></div><ul class="logs" id="log"></ul>
     <div class="controls" style="width:100%">
       <button id="btnPause">⏸ 暂停</button>
       <button id="btn1x" class="active">1x</button>
@@ -58,6 +58,28 @@
     <ul class="attr-circles" id="attrs"></ul>
   </div>
 </div>
+
+<!-- 宝黄天：与人生页同级的独立页面，不使用遮罩或弹窗。 -->
+<section class="screen forge-screen hidden" id="screen-forge" aria-label="炼蛊坊">
+  <header class="forge-header"><div><p class="shop-eyebrow">择材入炉 · 炼蛊求真</p><h1>炼蛊坊</h1><p id="forgeBalance"></p></div><div class="forge-actions"><button onclick="openForgeShop()">宝黄天补货</button><button onclick="openWarehouse()">查看仓库</button><button onclick="closeForge()">返回人生</button></div></header>
+  <p id="forgeMessage" role="status" aria-live="polite"></p>
+  <div class="forge-layout">
+    <section class="forge-inventory forge-card" aria-label="材料仓库"><h2>材料仓库</h2><p class="forge-hint">勾选具体蛊虫，或填写材料份数。准备时不扣除库存。</p><div class="forge-tabs"><button id="forgeGuTab" onclick="forgeSelectCategory('gu')">蛊虫</button><button id="forgeMaterialTab" onclick="forgeSelectCategory('material')">材料</button></div><input class="forge-search" type="search" aria-label="查找材料" placeholder="按名称查找" oninput="forgeSearch(this.value)"><div id="forgeInventory"></div></section>
+    <section class="forge-furnace forge-card" aria-label="炼炉"><h2>本次炼炉</h2><div id="forgeInputs"></div><div id="forgeRisk"></div><p id="forgeIssue" class="forge-warning"></p><button class="primary" id="forgeBegin" onclick="prepareForge()">检查投入与风险</button><div id="forgeConfirm" aria-live="polite"></div><div id="forgeResult" aria-live="polite"></div></section>
+    <aside class="forge-recipes forge-card" aria-label="配方册"><h2>配方册</h2><div id="forgeRecipe"></div></aside>
+  </div>
+</section>
+<section class="screen shop-screen hidden" id="screen-shop" aria-label="宝黄天">
+  <button id="shopReturnForge" class="hidden" onclick="openForge()">返回炼蛊坊（保留投料）</button>
+  <header class="shop-header"><div><p class="shop-eyebrow">万物可易 · 各取所需</p><h1>宝黄天</h1><p id="shopBalance"></p></div><div class="shop-header-actions"><button onclick="openWarehouse()">查看仓库</button><button onclick="closeShop()">返回人生</button></div></header>
+  <nav class="shop-grades" id="shopGrades" aria-label="交易分区"></nav>
+  <nav class="shop-categories" id="shopCategories" aria-label="商品分类"></nav>
+  <p id="shopIntro"></p>
+  <p id="shopMessage" class="shop-message" role="status" aria-live="polite"></p>
+  <div class="shop-grid" id="shopGrid"></div>
+  <div class="shop-pagination"><button id="shopPrev" onclick="shopChangePage(-1)">上一页</button><span id="shopPage"></span><button id="shopNext" onclick="shopChangePage(1)">下一页</button></div>
+  <p class="shop-footnote">购买后收入仓库。浏览期间时间暂停，返回人生后可继续推进。</p>
+</section>
 
 <!-- ============ 蛊虫仓库（5×6 网格） ============ -->
 <div class="overlay hidden" id="warehouse">
@@ -72,6 +94,7 @@
     <div class="warehouse-grid" id="warehouseGrid"></div>
     <div id="warehouseFood"></div>
     <div id="warehouseRecipes"></div>
+    <div id="warehouseShopStock"></div>
   </div>
 </div>
 
@@ -80,6 +103,8 @@
   <div class="warehouse-panel" id="deathContent"></div>
 </div>
 
+<div class="overlay hidden" id="activityPanel"><div class="warehouse-panel" id="activityContent"></div></div>
+<section class="screen battle-screen hidden" id="battlePanel" aria-label="回合战斗"><div id="battleContent"></div></section>
 <!-- 脚本按依赖顺序加载 -->
 <script src="engine/rng.js"></script>
 <script src="data/gu.js"></script>
@@ -102,6 +127,13 @@
 <script src="engine/rebirth.js"></script>
 <script src="engine/ending.js"></script>
 <script src="save.js"></script>
+<script src="data/upgrade.js"></script>
+<script src="engine/upgrade.js"></script>
+<script src="engine/forge.js"></script>
+<script src="engine/battle.js"></script>
+<script src="data/shop.js"></script>
+<script src="engine/shop.js"></script>
+<script src="engine/forge-page.js"></script>
 
 <script>
 $('btnPause').onclick = togglePause;
@@ -119,7 +151,7 @@ renderAttrs();
 updateControls();
 
 // 测试用：控制条常驻「测试死亡」按钮，方便验证重生流程（正式发布前可移除）
-{
+if (new URLSearchParams(location.search).get('debug') === '1'){
   const dbg = document.createElement('button');
   dbg.textContent = '测试死亡';
   dbg.onclick = () => endGame('（调试）寿元已尽。', '寿终');

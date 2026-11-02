@@ -99,7 +99,7 @@ const CHOICE_EVENTS = [
   { id:'choice_10', phase:'cultivation', chainId:'stone_gamble', chainStep:2, text:'摊主取出原石，薄薄的石皮下隐约透出异色。', min:15, max:200, once:true, cond:s=>!!s.资质,
     choices:[
       { text:'花 4 元石当场解石', need:s=>s.money>=4 && (s.flags.has('stone_reserved') || s.flags.has('stone_deferred')), needText:'需原石凭据且有 4 元石', cost:{元石:-4}, outcomes:[
-          { weight:1, weightByAttr:['运气'], gu:'星镖蛊', result:'石皮剥落，一只完整的一转星镖蛊显露出来！' },
+          { weight:1, weightByAttr:['运气'], guReward:{id:3,count:1}, result:'石皮剥落，一只完整的一转星镖蛊显露出来！' },
           { weight:1, weightByAttr:['智力'], effect:{元石:2}, result:'里面没有蛊虫，却藏着两枚旧元石。' },
           { weight:1, effect:{体力:-0.08}, result:'原石碎成粉末，解石费也打了水漂。' },
         ] },
@@ -124,7 +124,7 @@ const CHOICE_EVENTS = [
   { id:'choice_13', phase:'cultivation', chainId:'wild_gu', chainStep:2, text:'林中传来一声爆响，散修和野蛊都失去了平衡。', min:15, max:200, once:true, cond:s=>!!s.资质,
     choices:[
       { text:'追击时趁势制住野蛊', need:s=>s.flags.has('wild_pursued'), needText:'需选择追击', cost:{体力:-0.08}, outcomes:[
-          { weight:1, weightByAttr:['体质'], effect:{修炼:5}, result:'你压住野蛊的冲势，迫使散修暂时退开。' },
+          { weight:1, weightByAttr:['体质'], flags:['wild_controlled'], effect:{修炼:5}, result:'你压住野蛊的冲势，迫使散修暂时退开。' },
           { weight:1, effect:{血条:-0.12}, result:'野蛊反扑，你被擦伤，只能拉开距离。' },
         ] },
       { text:'交涉时观察散修的配合方式', need:s=>s.flags.has('wild_talked'), needText:'需选择交涉', outcomes:[
@@ -138,6 +138,7 @@ const CHOICE_EVENTS = [
     ] },
   { id:'choice_14', phase:'cultivation', chainId:'wild_gu', chainStep:3, text:'散修退去后，林间只剩下破损的蛊囊和一串新鲜脚印。', min:15, max:200, once:true, cond:s=>!!s.资质,
     choices:[
+      { text:'收服被制住的野蛊', need:s=>s.flags.has('wild_controlled'), needText:'需先制住野蛊', guReward:{id:11,count:1}, result:'你收服一只花豕蛊，将它放入仓库。' },
       { text:'检查蛊囊与脚印', outcomes:[
           { weight:1, weightByAttr:['运气'], effect:{元石:2, 修炼:2}, result:'你找到两枚元石和一条通往旧营地的线索。' },
           { weight:1, effect:{体力:-0.03}, result:'蛊囊已空，你只确认了散修逃离的方向。' },
@@ -149,7 +150,7 @@ const CHOICE_EVENTS = [
   { id:'choice_15', phase:'cultivation', text:'一页残缺蛊方在旧书摊出售，摊主只肯留到日落。', min:15, max:200, once:true, cond:s=>!!s.资质,
     choices:[
       { text:'花 3 元石买下抄本', need:s=>s.money>=3, needText:'需 3 元石', cost:{元石:-3}, outcomes:[
-          { weight:1, weightByAttr:['智力'], effect:{修炼:8}, result:'你补出蛊方缺失的一笔，理解了其中的运转思路。' },
+          { weight:1, weightByAttr:['智力'], effect:{修炼:8}, recipeReward:'moonGlow', result:'你补出蛊方缺失的一笔，理解了其中的运转思路。' },
           { weight:1, effect:{智力:1}, result:'抄本有误，但你从错处看出一种常见炼蛊手法。' },
         ] },
       { text:'只记下封皮上的书名', effect:{智力:1}, result:'你没有花钱，只把书名记在心里。' },
@@ -251,7 +252,7 @@ const CHOICE_EVENTS = [
     ] },
   { id:'choice_26', phase:'cultivation', text:'月夜里，月光蛊的光芒忽然变得格外明亮。', min:15, max:200, once:true, cond:s=>!!s.资质 && s.gu.has('月光蛊'),
     choices:[
-      { text:'试着引导月光蛊的气息', cost:{真元:-0.08}, outcomes:[
+      { text:'试着引导月光蛊的气息', need:()=>isGuUsableByName('月光蛊'),needText:'需健康且正在供养的月光蛊', cost:{真元:-0.08}, outcomes:[
           { weight:1, weightByAttr:['智力'], effect:{修炼:6}, result:'你找到更顺畅的催动节奏，收住了外泄的真元。' },
           { weight:1, effect:{体力:-0.05}, result:'月光散去，你只记下了短暂的光纹变化。' },
         ] },

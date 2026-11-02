@@ -7,10 +7,12 @@
 const SAVE_KEY = 'gu_game_save_v2';
 
 function saveGame(){
+  if(!state.alive || typeof saveReadBlocked!=='undefined' && saveReadBlocked)return false;
   try {
     ensureGuItems();
     localStorage.setItem(SAVE_KEY, JSON.stringify({
-      ver: 3,
+      ver: 4,
+      upgrade: state.upgrade,
       attrs: state.attrs,
       thresholds: state.thresholds,
       resources: state.resources,
@@ -32,10 +34,14 @@ function saveGame(){
       seenGu: [...state.seenGu],
       guItems: state.guItems, guSeq: state.guSeq, unknownGu: state.unknownGu,
       foodStock: state.foodStock, materialStock: state.materialStock, lastFeedMonth: state.lastFeedMonth,
+      m4ExploreDay:state.m4ExploreDay, m4CaptureYear:state.m4CaptureYear, m4CaptureCount:state.m4CaptureCount,
+      m4MarketMonth:state.m4MarketMonth, m4MarketIds:state.m4MarketIds, m4MarketBought:state.m4MarketBought,
+      m4Strength:state.m4Strength,
       flags: [...state.flags],
       fired: [...state.fired],
     }));
-  } catch (e) { /* 忽略（隐私模式等） */ }
+    return true;
+  } catch (e) { if(typeof storageNotice==='function')storageNotice('保存失败，请保持页面打开并检查浏览器存储。');return false; }
 }
 
 function loadGame(){
@@ -43,6 +49,9 @@ function loadGame(){
     const raw = localStorage.getItem(SAVE_KEY);
     if (!raw) return false;
     const d = JSON.parse(raw);
+    if(!d || typeof d!=='object' || Array.isArray(d) || d.attrs && (typeof d.attrs!=='object' || Array.isArray(d.attrs)))throw new Error('存档结构损坏');
+    state.alive=true;
+    if(typeof loadUpgrade==='function')loadUpgrade(d.upgrade,d.resources);
 
     state.attrs = d.attrs || { ...BASE_ATTRS };
     state.money = Number.isInteger(d.money) && d.money >= 0 ? d.money : initialMoney(state.attrs);
@@ -70,6 +79,13 @@ function loadGame(){
     state.foodStock = Object.fromEntries(FOODS.map(f=>[f.id,safeCount(d.foodStock?.[f.id])]));
     state.materialStock = Object.fromEntries(MATERIALS.map(m=>[m.id,safeCount(d.materialStock?.[m.id])]));
     state.lastFeedMonth = Number.isInteger(d.lastFeedMonth) ? d.lastFeedMonth : null;
+    state.m4ExploreDay = Number.isInteger(d.m4ExploreDay) ? d.m4ExploreDay : null;
+    state.m4CaptureYear = Number.isInteger(d.m4CaptureYear) ? d.m4CaptureYear : null;
+    state.m4CaptureCount = safeCount(d.m4CaptureCount);
+    state.m4MarketMonth = Number.isInteger(d.m4MarketMonth) ? d.m4MarketMonth : null;
+    state.m4MarketIds = Array.isArray(d.m4MarketIds) ? d.m4MarketIds.filter(id=>M4_EXTRA.pool.includes(id)).slice(0,2) : [];
+    state.m4MarketBought = Array.isArray(d.m4MarketBought) ? d.m4MarketBought.filter(id=>M4_EXTRA.pool.includes(id)) : [];
+    state.m4Strength = {black:Math.min(M4_EXTRA.strengthCap,safeCount(d.m4Strength?.black)),white:Math.min(M4_EXTRA.strengthCap,safeCount(d.m4Strength?.white))};
     ensureGuItems();
     syncLegacyGu();
     state.flags = new Set(d.flags || []);
@@ -82,12 +98,13 @@ function loadGame(){
         state.resources[k] = Math.min(state.resourceMax[k], Math.max(0, d.resources[k] ?? 0));
       }
     }
+    if(typeof saveReadBlocked!=='undefined')saveReadBlocked=false;
     return true;
-  } catch (e) { return false; }
+  } catch (e) {if(typeof storageNotice==='function'){saveReadBlocked=true;storageNotice('读档失败，原始存档已保留。请勿开始新游戏覆盖进度。');}return false; }
 }
 
 function clearSave(){
-  try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+  try { localStorage.removeItem(SAVE_KEY); } catch (e) {if(typeof storageNotice==='function')storageNotice('清理本世存档失败，刷新可能读回旧进度，请检查浏览器存储。');}
 }
 
 function hasSave(){
