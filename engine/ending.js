@@ -43,7 +43,7 @@ function finalizeEnding(endingType, note){
 function showSummary(endingType, note){
   const score = state.rank * 4 + state.sub;
   let grade, title;
-  if (score >= 12){ grade = 'S'; title = '三转蛊师'; }
+  if (score >= 12){ grade = 'S'; title = RANKS[state.rank-1]?.title || realmLabel(); }
   else if (score >= 8){ grade = 'A'; title = '二转蛊师'; }
   else if (score >= 4){ grade = 'B'; title = '一转蛊师'; }
   else { grade = 'C'; title = '蝼蚁之命'; }

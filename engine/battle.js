@@ -5,8 +5,8 @@ function restoreBattle(b,resources,soul){
   if(!b||typeof b.name!=='string'||!Number.isFinite(b.hp)||b.hp<=0||b.hp>1000||!Number.isSafeInteger(b.turn)||b.turn<1||!Number.isFinite(b.power))return null;
   const kind=Object.hasOwn(BATTLE_TYPES,b.kind)?b.kind:b.lethal?(b.name.includes('野兽')?'beast':'enemy'):'spar';
   const count=(v,max)=>Math.min(max,safeCount(v)),num=(v,f,min,max)=>Number.isFinite(v)?Math.max(min,Math.min(max,v)):f;
-  return {kind,rank:num(b.rank,Math.round((b.power-7)/3),1,5),name:BATTLE_TYPES[kind].name,hp:b.hp,maxHp:num(b.maxHp,b.hp,b.hp,1000),turn:b.turn,
-    power:num(b.power,10,1,100),lethal:BATTLE_TYPES[kind].lethal,focus:num(b.focus,1,1,2),weakTurns:count(b.weakTurns,2),weak:num(b.weak,0,0,.8),
+  return {kind,rank:num(b.rank,Math.round((b.power-7)/3),1,CULT.maxRank),name:BATTLE_TYPES[kind].name,hp:b.hp,maxHp:num(b.maxHp,b.hp,b.hp,1000),turn:b.turn,
+    leafUsed:!!b.leafUsed,power:num(b.power,10,1,100),lethal:BATTLE_TYPES[kind].lethal,focus:num(b.focus,1,1,2),weakTurns:count(b.weakTurns,2),weak:num(b.weak,0,0,.8),
     boostTurns:count(b.boostTurns,3),boost:num(b.boost,0,0,12),wineUsed:!!b.wineUsed,start:battleResourceSnapshot(b.start||resources,soul),
     spent:Object.fromEntries(['真元','体力','soul'].map(k=>[k,Number.isFinite(b.spent?.[k])?Math.max(0,b.spent[k]):0])),consumed:Array.isArray(b.consumed)?b.consumed.filter(x=>typeof x==='string').slice(-100):[],
     log:Array.isArray(b.log)?b.log.filter(x=>typeof x==='string').slice(-40):[]};
@@ -25,7 +25,7 @@ function battleStartIssue(kind){
 function battleBrief(kind,rank){const t=BATTLE_TYPES[kind];return t.name+' · 估计'+rank+'转。'+t.reason+' '+(t.lethal?'失败可能死亡；撤退成功率45%，失败会遭到回应。':'危险伤势时对方停手，可以直接认输。')+' '+t.reward;}
 function offerBattle(){
   const roll=rng(),kind=roll<.2?'spar':roll<.4?'teacher':roll<.7?'beast':'enemy';if(battleStartIssue(kind))return false;
-  const rank=Math.min(5,state.rank+(kind==='enemy'&&rng()<.1?1:0));
+  const rank=Math.min(CULT.maxRank,state.rank+(kind==='enemy'&&rng()<.1?1:0));
   fireChoice({id:'encounter_'+kind,text:battleBrief(kind,rank),choices:[
     {text:'准备交战',act:()=>{gameState=GAME.IDLE;startBattle(kind,rank);}},
     {text:'避开冲突（体力 −2%）',result:'你绕道而行，保留实力。',effect:{体力:-.02}}
@@ -38,7 +38,7 @@ function previewBattle(kind='spar'){
 }
 function confirmBattlePreview(){const p=battlePreview;battlePreview=null;return !!p&&startBattle(p.kind,p.rank);}
 function startBattle(kind='spar',enemyRank=state.rank){
-  if(battleStartIssue(kind)||!Number.isInteger(enemyRank)||enemyRank<1||enemyRank>5)return false;
+  if(battleStartIssue(kind)||!Number.isInteger(enemyRank)||enemyRank<1||enemyRank>CULT.maxRank)return false;
   const t=BATTLE_TYPES[kind];closeActivities();$('warehouse').classList.add('hidden');stopTimer();paused=true;gameState=GAME.BATTLE;
   const u=upgradeState();u.battleResult=null;
   u.battle={kind,rank:enemyRank,name:t.name,hp:35+enemyRank*15,maxHp:35+enemyRank*15,power:7+enemyRank*3,
@@ -60,7 +60,9 @@ function battleGuIssue(uid){
   if(!x||!g||!BATTLE_GU[g.id])return '无战斗用途';
   if(!x.active||x.missed||x.locked)return '需健康供养蛊';
   if(g.rank>state.rank)return '境界不足';
-  if(g.id===2&&(state.rank!==1||b?.wineUsed))return state.rank!==1?'仅一转可用':'本场已提纯';
+  if(g.id===108&&b?.leafUsed)return '本场已使用生机叶';
+  const onlyRank=BATTLE_GU[g.id].onlyRank||(g.id===2?1:0);
+  if(onlyRank&&(state.rank!==onlyRank||b?.wineUsed))return state.rank!==onlyRank?'仅'+onlyRank+'转可用':'本场已提纯';
   if([7,8].includes(g.id)&&state.m4Strength[g.id===7?'black':'white']>=M4_EXTRA.strengthCap)return '气力已达上限';
   if(state.resources.真元<state.resourceMax.真元*BATTLE_GU[g.id].cost)return '真元不足';return '';
 }
@@ -68,7 +70,7 @@ function battleEffectText(id){
   const c=BATTLE_GU[id];if(!c)return '';
   return {attack:'造成'+c.power+'基础伤害'+(c.pierce?'，穿透本回合敌方防守':''),defend:'本回合受到伤害减少'+Math.round(c.power*100)+'%',
     weaken:'敌方伤害降低'+Math.round(c.power*100)+'%，持续'+(c.duration||1)+'回合',focus:'下一次攻击伤害×'+c.power+'（不叠加）；本回合减伤20%',
-    restore:'恢复25%真元上限，每场一次，仅一转可用',strength:'消耗这只蛊，永久气力+1，本回合减伤30%',boost:'消耗这只蛊，接下来两回合攻击额外+12（不叠加）'}[c.kind];
+    heal:'恢复'+Math.round(c.power*100)+'%血量上限'+(c.consume?'，消耗此蛊':'')+(id===108?'，本场仅一次':''),restore:'恢复'+Math.round(c.power*100)+'%真元上限，每场一次，仅'+(c.onlyRank||1)+'转可用',strength:'消耗这只蛊，永久气力+1，本回合减伤30%',boost:'消耗这只蛊，接下来两回合攻击额外+12（不叠加）'}[c.kind];
 }
 function requestBattleGu(uid,turn){
   const b=upgradeState().battle;if(!b||turn!==b.turn||battleGuIssue(uid))return false;
@@ -111,6 +113,7 @@ function battleAction(action,uid=null,expectedTurn=null){
     if(c.kind==='defend')guard=c.power;
     if(c.kind==='weaken'){b.weak=c.power;b.weakTurns=c.duration||1;}
     if(c.kind==='focus'){b.focus=c.power;guard=.2;}
+    if(c.kind==='heal'){applyEffect({血条:c.power});if(x.id===108)b.leafUsed=true;}
     if(c.kind==='restore'){applyEffect({真元:c.power});b.wineUsed=true;}
     if(c.kind==='boost'){b.boost=c.power;b.boostTurns=3;}
     if(c.kind==='strength'){state.m4Strength[x.id===7?'black':'white']++;guard=.3;}

@@ -107,25 +107,14 @@ function toggleValue(k){
   renderAttrs();
 }
 
-/* 渲染属性面板（右侧竖排圆形能量环） */
+/* 左侧五项属性：数值常显，按钮切换阈值说明。 */
 function renderAttrs(){
-  const R = 42, C = 2 * Math.PI * R;
   document.getElementById('attrs').innerHTML = ATTR_KEYS.map(k => {
-    const v = state.attrs[k];
-    const t = state.thresholds[k];
-    const progress = Math.min(1, v / t);
-    const offset = (C * (1 - progress)).toFixed(1);
-    const gc = gradeColor(v);
-    const label = showValueMode.has(k) ? `${t} : ${v}` : k;
-    return `<li class="attr-circle" style="--grade-color:${gc}" onclick="toggleValue('${k}')">
-      <svg viewBox="0 0 100 100">
-        <circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--g0)" stroke-opacity=".25" stroke-width="9"/>
-        <circle cx="50" cy="50" r="${R}" fill="none" stroke="var(--grade-color)" stroke-width="9"
-          stroke-linecap="round" stroke-dasharray="${C.toFixed(1)}" stroke-dashoffset="${offset}"
-          transform="rotate(-90 50 50)"/>
-        <text class="attr-label" x="50" y="53" text-anchor="middle" dominant-baseline="middle">${label}</text>
-      </svg>
-    </li>`;
+    const v=state.attrs[k], t=state.thresholds[k], show=showValueMode.has(k);
+    const progress=Math.max(0,Math.min(100,v/t*100));
+    return `<li><button class="attribute-row" onclick="toggleValue('${k}')" aria-expanded="${show}" style="--attribute-progress:${progress}%">
+      <span>${k}</span><strong>${v}</strong>${show?`<small>下一成长阈值 ${t}</small>`:''}
+    </button></li>`;
   }).join('');
 }
 
@@ -156,6 +145,8 @@ function renderStatus(){
     </div>`;
   }
 
+  if (state.rank === CULT.maxRank && state.sub === 3 && state.cult >= cultNeed(state.rank,3)) html += '<div class="realm-essence">九转巅峰圆满 · 已达境界上限</div>';
+
   // 三条资源
   html += ['血条','真元','体力'].map(k => {
     const v = state.resources[k], m = state.resourceMax[k];
@@ -165,17 +156,12 @@ function renderStatus(){
   }).join('');
 
   html += `<div class="status-bar"><div class="status-name">元石</div><div class="status-money">${state.money}</div></div>`;
+  if (state.rank >= 6 && typeof upgradeState === 'function') html += `<div class="status-bar"><div class="status-name">仙元储备</div><div class="status-money">${upgradeState().immortalMoney}</div></div><div class="realm-essence">每月 +${CULT.immortalMonthly[state.rank]} · 用于宝黄天交易，与资源条分开</div>`;
   if (typeof ensureGuItems === 'function'){
     ensureGuItems();
     html += `<div class="status-bar"><div class="status-name">供养</div><div class="status-money">${state.guItems.filter(x=>x.active).length}/${M4.slots(state.attrs.家境)}</div></div>`;
   }
 
   if(state.upgrade)html+='<div class="status-bar"><div class="status-name">魂魄</div><div>'+Math.ceil(state.upgrade.soul)+' / '+state.upgrade.soulMax+'</div></div>';
-  // 蛊虫图标
-  html += `<div class="gu-icon" onclick="openWarehouse()">
-    <svg viewBox="0 0 100 100"><circle cx="50" cy="50" r="44" fill="none" stroke="var(--g1)" stroke-width="5"/></svg>
-    <div class="gu-icon-name">蛊虫</div>
-  </div>`;
-
   document.getElementById('status').innerHTML = html;
 }

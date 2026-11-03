@@ -62,7 +62,7 @@ function upgradeTime(days){
   for(let i=0;i<days&&state.alive;i++){
     const old=monthKey();state.day++;
     if(state.day>30){state.day=1;state.month++;}if(state.month>12){state.month=1;state.age++;}
-    if(old!==monthKey())for(const msg of settleMonthlyFeeding())addLog(msg);
+    if(old!==monthKey()){settleImmortalMonth();for(const msg of settleMonthlyFeeding())addLog(msg);}
     const death=checkDeath();if(death)endGame('行动期间寿尽或伤重陨落。',death);
   }
 }
@@ -146,4 +146,13 @@ function renderActivities(){
   if(tab==='infer')html+='<h3>推演蛊方</h3><p>消耗10魂魄与一天时间。可发现未知配方或补全遗忘；相关炼蛊尝试提供一次加成，30日内有效，不叠加。</p><div class="activity-actions"><button onclick="uiInfer(false)">独立推演</button><button onclick="uiInfer(true)">推演最近炼蛊组合</button></div><h3>已获配方</h3>'+RECIPES.filter(r=>recipeKnown(r.id)).map(r=>'<p>'+guById(r.output.id).name+'：'+escapeM4Text(remembered('recipe:'+r.id,r.inputs.map(x=>guById(x.id).name+'×'+x.count).join('＋')))+'</p>').join('');
   if(tab==='rest')html+='<h3>休养</h3><p>休养五日恢复20魂魄，并恢复部分身体资源。休养不能修复容量损伤。</p><button onclick="restSoul()">休养五日</button>';
   $('activityContent').innerHTML=html;
+}
+
+/* 只在日期推进跨月时调用；读档/渲染不产出，不给离线补发。 */
+function settleImmortalMonth(){
+  if (!state.alive || checkDeath() || state.rank < 6) return;
+  const amount = CULT.immortalMonthly[state.rank] || 0;
+  const u = upgradeState();
+  u.immortalMoney = Math.min(Number.MAX_SAFE_INTEGER, u.immortalMoney + amount);
+  addLog('仙窍月度积累：仙元储备 +' + amount + '（可用于宝黄天交易）。');
 }

@@ -92,7 +92,7 @@ function toggleGuFeeding(uid){
   if(gameState===GAME.BATTLE||!state.alive)return false;
   ensureGuItems();
   const item=state.guItems.find(x=>x.uid===Number(uid));
-  if (!item || item.locked) return false;
+  if (!item || item.locked || !item.active&&guById(item.id)?.available===false) return false;
   if (!item.active && state.guItems.filter(x=>x.active).length >= M4.slots(state.attrs.家境)) return false;
   item.active=!item.active;
   saveGame(); renderWarehouse(); renderStatus();
@@ -127,6 +127,8 @@ function buyFood(id){
   if(gameState===GAME.BATTLE||!state.alive)return false;
   ensureGuItems();
   const food=FOODS.find(f=>f.id===id);
+  if (food?.available===false)return false;
+  if(food?.grade==='immortal'){if(typeof buyShopGood==='undefined')return false;const result=buyShopGood('food_'+id);if(result.ok){saveGame();renderWarehouse();renderStatus();}return result.ok;}
   if (!food || !Number.isSafeInteger(state.money) || state.money<food.price) return false;
   state.money-=food.price;
   state.foodStock[id]=safeCount(state.foodStock[id])+food.amount;
@@ -145,6 +147,8 @@ function buyMaterialGu(id){
 function buyMaterial(id){
   if(gameState===GAME.BATTLE||!state.alive)return false;
   const material=MATERIALS.find(m=>m.id===id);
+  if(material?.available===false || material?.grade==='unknown')return false;
+  if(material?.grade==='immortal'){if(typeof buyShopGood==='undefined')return false;const result=buyShopGood('material_'+id);if(result.ok){saveGame();renderWarehouse();renderStatus();}return result.ok;}
   if (!material || state.money<material.price) return false;
   state.money-=material.price;
   state.materialStock[id]=safeCount(state.materialStock[id])+1;
@@ -243,6 +247,7 @@ function recipeAvailability(recipe,useOptional=false){
   if (state.rank<recipe.minRank) return '境界不足';
   if (state.money<recipe.cost) return '元石不足';
   if (useOptional && (!recipe.optional || safeCount(state.materialStock[recipe.optional.id])<1)) return '辅料不足';
+  if ((recipe.materials||[]).some(m=>safeCount(state.materialStock[m.id])<m.count))return '炼制材料不足';
   if (recipeInputs(recipe).some(x=>x.items.length<x.req.count)) return '蛊虫材料不足';
   return '';
 }
@@ -264,8 +269,8 @@ function renderM4Panels(){
     '<div class="m4-row"><button onclick="exploreForGu()" '+(!m4ActionReady() || state.resources.体力<state.resourceMax.体力*M4_EXTRA.exploreCost || state.m4CaptureYear===state.age && state.m4CaptureCount>=M4_EXTRA.captureYearCap || state.m4ExploreDay!==null && gameDayNumber()-state.m4ExploreDay<M4_EXTRA.exploreCooldown?'disabled':'')+'>野外寻蛊</button></div>'+
     state.m4MarketIds.map(id=>'<div class="m4-row"><span>'+escapeM4Text(guById(id).name)+' · '+M4_EXTRA.prices[id]+' 元石</span><button onclick="buyCommonGu('+id+')" '+(!m4ActionReady() || state.money<M4_EXTRA.prices[id] || state.m4MarketBought.includes(id)?'disabled':'')+'>'+(state.m4MarketBought.includes(id)?'本月已购':'购买')+'</button></div>').join('')+
     '<p>永久气力：黑豕 '+state.m4Strength.black+' 层 · 白豕 '+state.m4Strength.white+' 层（每类最多 '+M4_EXTRA.strengthCap+' 层）</p>'+
-    FOODS.map(f=>`<div class="m4-row"><span>${f.name}：${safeCount(state.foodStock[f.id])} ${f.unit}</span><button onclick="buyFood('${f.id}')" ${state.money<f.price?'disabled':''}>购入 ${f.amount}${f.unit} · ${f.price}元石</button></div>`).join('')+
+    FOODS.filter(f=>f.available!==false).map(f=>`<div class="m4-row"><span>${f.name}：${safeCount(state.foodStock[f.id])} ${f.unit}</span><button onclick="buyFood('${f.id}')" ${(f.grade==='immortal'?(state.rank<6||upgradeState().immortalMoney<f.price):state.money<f.price)?'disabled':''}>购入 ${f.amount}${f.unit} · ${f.price}${f.grade==='immortal'?'仙元':'元石'}</button></div>`).join('')+
     '<h3>合炼输入蛊</h3>'+Object.entries(MATERIAL_GU_PRICES).map(([id,price])=>`<div class="m4-row"><span>${guById(id).name} · ${state.guItems.filter(x=>x.id===Number(id)).length} 只</span><button onclick="buyMaterialGu(${id})" ${state.money<price?'disabled':''}>购入 · ${price}元石</button></div>`).join('')+
-    MATERIALS.map(m=>`<div class="m4-row"><span>${m.name}：${safeCount(state.materialStock[m.id])}</span><button onclick="buyMaterial('${m.id}')" ${state.money<m.price?'disabled':''}>购入 · ${m.price}元石</button></div>`).join('');
+    MATERIALS.filter(m=>m.available!==false).map(m=>`<div class="m4-row"><span>${m.name}：${safeCount(state.materialStock[m.id])}</span><button onclick="buyMaterial('${m.id}')" ${state.money<m.price?'disabled':''}>购入 · ${m.price}元石</button></div>`).join('');
   if(typeof renderForgeEntry==='function')renderForgeEntry();
 }

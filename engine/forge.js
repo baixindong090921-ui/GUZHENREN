@@ -1,6 +1,6 @@
 /* 实际投入决定炼制，知识只影响界面提示。 */
 function forgeMaterials(){
-  return MATERIALS.map(m=>({id:m.id,name:m.name,grade:'mortal',stock:safeCount(state.materialStock?.[m.id])})).concat(
+  return MATERIALS.map(m=>({id:m.id,name:m.name,grade:m.grade||'mortal',stock:safeCount(state.materialStock?.[m.id])})).concat(
     typeof SHOP_GOODS==='undefined'?[]:SHOP_GOODS.filter(g=>g.category==='material'&&!g.stock).map(g=>({id:g.id,name:g.name,grade:g.grade,stock:safeCount(upgradeState().shopStock[g.id])})));
 }
 function forgeMaterialCount(id){return forgeMaterials().find(m=>m.id===id)?.stock||0;}
@@ -15,8 +15,8 @@ function forgeInputsIssue(uids,materials={}){
   if(!Array.isArray(uids)||new Set(uids).size!==uids.length)return '请选择不重复的实际蛊虫';
   if(!materials||typeof materials!=='object'||Array.isArray(materials))return '材料输入无效';
   if(!uids.length&&!Object.values(materials).some(n=>n>0))return '请先投入蛊虫或材料';
-  for(const uid of uids){const x=state.guItems.find(x=>x.uid===uid);if(!x||x.locked)return '投入的蛊虫不存在或被占用';if(x.id===60)return '春秋蝉不可作为普通炼制材料';if(guById(x.id).rank>state.rank)return '投入蛊虫转数超过当前境界';}
-  for(const [id,n] of Object.entries(materials)){const m=forgeMaterials().find(x=>x.id===id);if(!m||!Number.isSafeInteger(n)||n<0||n>m.stock)return '材料不足或数量无效';if(n&&m.grade==='immortal'&&state.rank<6)return '六转后才可处理仙材';}
+  for(const uid of uids){const x=state.guItems.find(x=>x.uid===uid);if(!x||x.locked)return '投入的蛊虫不存在或被占用';if(guById(x.id).available===false)return '此蛊资料待核实，暂不能炼制';if(x.id===60)return '春秋蝉不可作为普通炼制材料';if(guById(x.id).rank>state.rank)return '投入蛊虫转数超过当前境界';}
+  for(const [id,n] of Object.entries(materials)){const m=forgeMaterials().find(x=>x.id===id);if(!m||!Number.isSafeInteger(n)||n<0||n>m.stock)return '材料不足或数量无效';if(n&&m.grade==='unknown')return '材料等级待核实';if(n&&m.grade==='immortal'&&state.rank<6)return '六转后才可处理仙材';}
   return '';
 }
 function forgeQuote(uids=[],materials={}){

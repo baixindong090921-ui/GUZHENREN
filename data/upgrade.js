@@ -23,3 +23,5 @@ const BATTLE_TYPES={
   beast:{name:'拦路野兽',lethal:true,reason:'野兽挡住去路，准备扑击。',reward:'胜利获3元石和猪肉补给；没有必掉蛊虫。'},
   enemy:{name:'敌对蛊师',lethal:true,reason:'敌对蛊师试图截取你的资源。',reward:'胜利获5元石，有机会发现未掌握的蛊方。'}
 };
+
+if(typeof CONTENT_BATTLE!=='undefined') Object.assign(BATTLE_GU,CONTENT_BATTLE);

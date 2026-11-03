@@ -67,6 +67,9 @@ function loadGame(){
     state.rank = d.rank ?? (state.资质 ? 1 : 0);
     state.sub = d.sub ?? 0;
     state.cult = d.cult ?? 0;
+    if (!Number.isInteger(state.rank) || state.rank < 0 || state.rank > CULT.maxRank ||
+        !Number.isInteger(state.sub) || state.sub < 0 || state.sub > 3 ||
+        !Number.isFinite(state.cult) || state.cult < 0) throw new Error('境界数据无效');
     state.breakPrep = d.breakPrep ?? 0;
     state.breakCooldown = d.breakCooldown ?? 0;
     state.breakPity = d.breakPity ?? 0;

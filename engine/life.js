@@ -21,7 +21,7 @@ const $ = id => document.getElementById(id);
 
 /* ---------- 屏幕切换 ---------- */
 function show(id){
-  ['screen-start','screen-gupick','screen-alloc','screen-play','screen-shop','screen-forge','battlePanel'].forEach(s => $(s)?.classList.add('hidden'));
+  ['screen-start','screen-gupick','screen-alloc','screen-play','screen-shop','screen-forge','screen-catalog','battlePanel'].forEach(s => $(s)?.classList.add('hidden'));
   $(id).classList.remove('hidden');
 }
 
@@ -337,6 +337,8 @@ function doBreak(rate){
   const res = resolveBreakthrough(rate);
   if (res.ok){
     addLog(`<span class="choice-picked">突破成功！你晋入「${realmLabel()}」。</span>`);
+  } else if (res.outcome === '不可突破'){
+    addLog('当前境界不可继续突破。');
   } else if (res.outcome === '爆体'){
     endGame('你突破时道痕反噬，爆体而亡。', '爆体');
   } else if (res.outcome === '致命'){
@@ -390,7 +392,7 @@ function stepDay(){
   state.day++;
   if (state.day > 30){ state.day = 1; state.month++; }
   if (state.month > 12){ state.month = 1; state.age++; }
-  if (monthKey()!==previousMonth) for (const msg of settleMonthlyFeeding()) addLog(msg);
+  if (monthKey()!==previousMonth){ settleImmortalMonth(); for (const msg of settleMonthlyFeeding()) addLog(msg); }
 
   // 死亡判定
   const d = checkDeath();
@@ -503,7 +505,7 @@ function renderWarehouse(){
     html += `<div class="gu-cell${name ? ' filled' : ''}">
       <div class="gu-cell-img"></div>
       <div class="gu-cell-name">${escapeM4Text(name)}</div>
-      ${gu ? `<small>${gu.rank}转 · ${gu.流派}</small><small>${food ? '食物：'+food.name : (gu.id===60?'特殊喂养规则':'食物待核实，暂不结算')}</small><small>${item.active ? item.missed ? '饥饿' : '供养中' : '仓库中'}</small>${M4_EXTRA.uses[gu.id]?`<small>用途：${escapeM4Text(M4_EXTRA.uses[gu.id].title)}</small><button onclick="useGuAction(${gu.id},${item.uid})" ${m4ActionReady()&&item.active&&item.missed===0&&!item.locked&&canUseGuAction(gu.id)?'':'disabled'}>催动</button>`:''}<button onclick="toggleGuFeeding(${item.uid})">${item.active ? '停止供养' : '加入供养'}</button>` : name ? '<small>旧档未识别，已保留</small>' : ''}
+      ${gu ? `<small>${gu.rank}转 · ${gu.流派}</small><small>${food ? '食物：'+food.name : (gu.id===60?'特殊喂养规则':'食物待核实，暂不结算')}</small><small>${item.active ? item.missed ? '饥饿' : '供养中' : '仓库中'}</small>${M4_EXTRA.uses[gu.id]?`<small>用途：${escapeM4Text(M4_EXTRA.uses[gu.id].title)}</small><button onclick="useGuAction(${gu.id},${item.uid})" ${m4ActionReady()&&item.active&&item.missed===0&&!item.locked&&canUseGuAction(gu.id)?'':'disabled'}>催动</button>`:''}<button onclick="toggleGuFeeding(${item.uid})" ${!item.active&&gu.available===false?'disabled':''}>${item.active ? '停止供养' : '加入供养'}</button>` : name ? '<small>旧档未识别，已保留</small>' : ''}
     </div>`;
   }
   $('warehouseGrid').innerHTML = html;

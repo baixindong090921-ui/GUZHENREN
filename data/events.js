@@ -19,7 +19,7 @@ const AUTO_EVENTS = [
   { id:'auto_7', phase:'cultivation', text:'你上山采药，调养伤势。', min:15, max:200, cond:s=>!!s.资质 && s.resources.血条/s.resourceMax.血条 < 0.6, effect:{血条:0.3} },
   { id:'auto_8', phase:'cultivation', text:'你静坐调息，恢复真元。', min:15, max:200, cond:s=>!!s.资质 && s.resources.真元/s.resourceMax.真元 < 0.5, effect:{真元:0.3} },
   { id:'auto_9', phase:'cultivation', text:'你与同窗对练，进步神速。', min:15, max:200, cond:s=>!!s.资质, effect:{体力:-0.10, 修炼:4} },
-  { id:'auto_10', phase:'cultivation', text:'你感到瓶颈将至，只差真元圆满便可冲击境界。', min:15, max:200, once:true, cond:s=>!!s.资质 && s.rank < 3 && s.sub===3 && s.resources.真元/s.resourceMax.真元 < CULT.breakEssenceReq },
+  { id:'auto_10', phase:'cultivation', text:'你感到瓶颈将至，只差真元圆满便可冲击境界。', min:15, max:200, once:true, cond:s=>!!s.资质 && s.rank < CULT.maxRank && s.sub===3 && s.resources.真元/s.resourceMax.真元 < CULT.breakEssenceReq },
 
   // 童年专属：训练、读书、家族关系与线索（M3 按月推进）
   { id:'auto_11', phase:'childhood', text:'你替药房搬运草筐，认得几味常见药草。', min:10, max:14, cooldown:180, effect:{智力:1, 体力:-0.03} },

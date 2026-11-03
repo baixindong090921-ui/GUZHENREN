@@ -20,3 +20,6 @@ _*.txt
 # 未接入运行的预留数据（index.html 不加载，不影响运行）
 data/streams.js
 data/killermove.js
+
+# 非运行所需：本地构建脚本（生成 data/catalog.js 用的 Python 工具）
+tools/

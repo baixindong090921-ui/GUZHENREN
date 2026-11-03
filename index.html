@@ -19,7 +19,7 @@
     前世你是炼天魔尊，这一世，你带着六转仙蛊「春秋蝉」重活一世，<br>
     誓要挣脱命运的束缚。
   </div>
-  <div class="controls"><div><button class="primary focus" onclick="startNew()">开始</button></div></div>
+  <div class="controls"><div><button class="primary focus" onclick="startNew()">开始</button><button onclick="openCatalog()">蛊虫与材料图鉴</button></div></div>
 </div>
 
 <!-- ============ 蛊虫选择 ============ -->
@@ -39,25 +39,46 @@
   </div>
 </div>
 
-<!-- ============ 初始界面（剧情页）：左侧状态栏，中间日志+控制，右侧属性圆环 ============ -->
+<!-- 人生主界面：左侧人物、中间剧情、右侧活动 -->
 <div class="screen play hidden" id="screen-play">
-  <div class="play-left">
+  <aside class="play-left" aria-label="人物属性与资源">
+    <header class="play-panel-heading"><span>人物</span><small>修为 · 资源 · 禀赋</small></header>
     <div id="status"></div>
-  </div>
-  <div class="play-main">
-    <div id="saveNotice" class="hidden" role="alert"></div><div class="activity-actions"><button onclick="openActivities()">寻蛊与历练</button><button onclick="openActivities('forge')">炼蛊</button><button onclick="openActivities('infer')">推演</button><button onclick="openActivities('shop')">宝黄天</button><button onclick="openActivities('rest')">休养</button><button onclick="openWarehouse()">仓库与供养</button></div><ul class="logs" id="log"></ul>
-    <div class="controls" style="width:100%">
+    <section class="play-attributes"><h2>五项禀赋</h2><p>点击属性查看下一成长阈值</p><ul class="attr-circles" id="attrs"></ul></section>
+  </aside>
+  <main class="play-main" aria-label="剧情与抉择">
+    <header class="story-heading"><div><p>蛊真人</p><h1>此生行记</h1></div><span>一念抉择，一世因果</span></header>
+    <div id="saveNotice" class="hidden" role="alert"></div>
+    <ul class="logs" id="log" aria-label="剧情记录" tabindex="0"></ul>
+    <div class="controls story-controls" aria-label="时间推进">
       <button id="btnPause">⏸ 暂停</button>
-      <button id="btn1x" class="active">1x</button>
-      <button id="btn2x">2x</button>
-      <button id="btn4x">4x</button>
+      <div class="speed-controls" role="group" aria-label="推进速度"><button id="btn1x" class="active">1x</button><button id="btn2x">2x</button><button id="btn4x">4x</button></div>
       <button id="btnNext" class="primary">下一步</button>
     </div>
-  </div>
-  <div class="play-side">
-    <ul class="attr-circles" id="attrs"></ul>
-  </div>
+  </main>
+  <aside class="play-side" aria-label="活动与管理">
+    <header class="play-panel-heading"><span>行止</span><small>经营 · 修行 · 探索</small></header>
+    <nav class="activity-actions" aria-label="游戏功能">
+      <h2>修行与历练</h2>
+      <button onclick="openActivities()"><span>寻蛊与历练</span><small>寻访机缘，磨砺自身</small></button>
+      <button onclick="openActivities('rest')"><span>休养</span><small>调养伤势与魂魄</small></button>
+      <h2>蛊虫与经营</h2>
+      <button class="activity-featured" onclick="openActivities('shop')"><span>宝黄天</span><small>交易蛊虫与修炼物资</small></button>
+      <button onclick="openActivities('forge')"><span>炼蛊</span><small>择材入炉，合炼升阶</small></button>
+      <button onclick="openActivities('infer')"><span>推演</span><small>推演蛊方，补全记忆</small></button>
+      <button onclick="openWarehouse()"><span>仓库与供养</span><small>整理收藏，安排喂养</small></button>
+      <h2>见闻</h2>
+      <button onclick="openCatalog()"><span>蛊虫图鉴</span><small>查阅蛊虫、食料与出处</small></button>
+    </nav>
+  </aside>
 </div>
+
+<section class="screen shop-screen hidden" id="screen-catalog" aria-label="蛊虫与材料图鉴">
+<header class="shop-header"><div><h1>蛊虫与材料图鉴</h1><p id="catalogCount"></p></div><button onclick="closeCatalog()">返回</button></header>
+<p>收录名称与已核实设定。待核实条目不出售、不开放使用；已收录不代表拥有。价格、食量和回合数值属于游戏设定。</p>
+<div class="catalog-controls"><label>查找 <input type="search" id="catalogSearch" placeholder="名称、别名或用途" oninput="catalogFilter('query',this.value)"></label><label>类别 <select id="catalogKind" onchange="catalogFilter('kind',this.value)"><option value="gu">蛊虫</option><option value="material">材料与食料</option></select></label><label>状态 <select id="catalogStatus" onchange="catalogFilter('status',this.value)"><option value="all">全部</option><option value="available">已接入</option><option value="pending">待核实 / 待接入</option></select></label></div>
+<div class="shop-grid" id="catalogGrid"></div><div class="shop-pagination"><button id="catalogPrev" onclick="catalogPage(-1)">上一页</button><span id="catalogPage"></span><button id="catalogNext" onclick="catalogPage(1)">下一页</button></div>
+</section>
 
 <!-- 宝黄天：与人生页同级的独立页面，不使用遮罩或弹窗。 -->
 <section class="screen forge-screen hidden" id="screen-forge" aria-label="炼蛊坊">
@@ -117,6 +138,8 @@
 <script src="data/cultivation.js"></script>
 <script src="data/events.js"></script>
 <script src="data/choices.js"></script>
+<script src="data/content.js"></script>
+<script src="data/catalog.js"></script>
 <script src="data/m3.js"></script>
 <script src="engine/property.js"></script>
 <script src="engine/gu.js"></script>
@@ -134,6 +157,7 @@
 <script src="data/shop.js"></script>
 <script src="engine/shop.js"></script>
 <script src="engine/forge-page.js"></script>
+<script src="engine/catalog.js"></script>
 
 <script>
 $('btnPause').onclick = togglePause;

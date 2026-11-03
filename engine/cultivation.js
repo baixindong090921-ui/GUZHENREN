@@ -6,7 +6,7 @@
 
 /* 小境界修炼需求，越界返回 Infinity */
 function cultNeed(rank, sub){
-  if (rank <= 0) return Infinity;
+  if (!Number.isInteger(rank) || !Number.isInteger(sub) || rank <= 0 || rank > CULT.maxRank) return Infinity;
   const tier = CULT.need[rank - 1];
   if (!tier) return Infinity;
   return (sub >= 0 && sub < tier.length) ? tier[sub] : Infinity;
@@ -81,7 +81,7 @@ function cultivateDay(){
 
 /* 是否可触发突破抉择（由状态实时推导，读档后自然重现） */
 function isBreakReady(){
-  if (state.rank <= 0 || state.rank >= 3) return false;
+  if (state.rank <= 0 || state.rank >= CULT.maxRank) return false;
   if (state.sub < 3) return false;
   if (state.cult < cultNeed(state.rank, state.sub)) return false;
   if (state.breakCooldown > 0) return false;
@@ -97,13 +97,14 @@ function breakSuccessRate(extra){
   p += Math.min(state.attrs.运气 * CULT.breakLuckPer, CULT.breakLuckCap);
   p += state.breakPrep * CULT.prepBonus;
   p += state.breakPity;
-  p -= state.rank * CULT.breakRankPenalty;
+  p -= Math.min(CULT.breakRankPenaltyCap, state.rank * CULT.breakRankPenalty);
   p += (extra || 0);
   return Math.min(CULT.breakClampMax, Math.max(CULT.breakClampMin, p));
 }
 
 /* 执行突破：返回 { ok, outcome }，outcome ∈ 成功/轻/重/致命/爆体 */
 function resolveBreakthrough(rate){
+  if (state.rank <= 0 || state.rank >= CULT.maxRank) return {ok:false, outcome:'不可突破'};
   if (rng() < rate){
     applyBreakthroughSuccess();
     return { ok:true, outcome:'成功' };
@@ -138,6 +139,7 @@ function fatalChance(fails){
 
 /* 突破成功 */
 function applyBreakthroughSuccess(){
+  if (state.rank <= 0 || state.rank >= CULT.maxRank) return false;
   state.rank += 1;
   state.sub = 0;
   state.cult = 0;
@@ -147,6 +149,7 @@ function applyBreakthroughSuccess(){
   const k = ATTR_KEYS[Math.floor(rng() * ATTR_KEYS.length)];
   state.attrs[k] += 1;
   syncThreshold();
+  return true;
 }
 
 /* 蓄力：+1 层，进入冷却 */

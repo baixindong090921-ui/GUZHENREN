@@ -5,19 +5,19 @@
 const SHOP_CATEGORIES = {gu:'蛊虫',material:'材料',food:'喂养食物',beast:'野兽',recipe:'蛊方'};
 const SHOP_PAGE_SIZE = 12;
 const SHOP_GOODS = [
-  ...GU.filter(g=>g.grade==='凡蛊' && g.rank<6).map(g=>({
+  ...GU.filter(g=>g.grade==='凡蛊' && g.rank<6 && g.available!==false).map(g=>({
     id:'gu_'+g.id,name:g.name,grade:'mortal',category:'gu',guId:g.id,
     price:MATERIAL_GU_PRICES[g.id]||M4_EXTRA.prices[g.id]||g.rank*18,
-    amount:1,unit:'只',desc:g.rank+'转 · '+g.流派+' · '+g.定位
+    amount:1,unit:'只',desc:g.rank+'转 · '+g.流派+' · '+g.定位+' · '+g.desc
   })),
-  ...[61,62,64,70,91,92,93,94].map(id=>{const g=guById(id);return {
+  ...GU.filter(g=>g.grade==='仙蛊'&&g.id!==60&&g.available!==false).map(g=>{const id=g.id;return {
     id:'gu_'+id,name:g.name,grade:'immortal',category:'gu',guId:id,
     price:120*(g.rank-5),amount:1,unit:'只',unique:true,
-    desc:g.rank+'转 · '+g.流派+' · 每世仅售一只；购买不代表已能催动'
+    desc:g.rank+'转 · '+g.流派+' · 每世仅售一只；购买不代表已能催动。'+g.desc
   }}),
-  ...FOODS.map(f=>({id:'food_'+f.id,name:f.name,grade:'mortal',category:'food',
+  ...FOODS.filter(f=>f.available!==false).map(f=>({id:'food_'+f.id,name:f.name,grade:f.grade||'mortal',category:'food',
     stock:'foodStock',key:f.id,price:f.price,amount:f.amount,unit:f.unit,desc:'购买后加入喂养库存，供养时自动取用'})),
-  ...MATERIALS.map(m=>({id:'material_'+m.id,name:m.name,grade:'mortal',category:'material',
+  ...MATERIALS.filter(m=>m.available!==false).map(m=>({id:'material_'+m.id,name:m.name,grade:m.grade||'mortal',category:'material',
     stock:'materialStock',key:m.id,price:m.price,amount:1,unit:'份',desc:m.source})),
   ...RECIPES.map(r=>({id:'recipe_'+r.id,name:guById(r.output.id).name+'蛊方',grade:'mortal',category:'recipe',
     recipeId:r.id,price:5,amount:1,unit:'份',unique:true,desc:'学习配方或补全前世模糊记忆；配方只提供提示'})),
