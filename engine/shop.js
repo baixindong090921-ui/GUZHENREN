@@ -1,30 +1,41 @@
 /* 独立商店页面；临时筛选不存档，货币、实物、仙蛊限售记录随本世存档。 */
-let shopView={grade:'mortal',category:'gu',page:0,message:''};
+const newShopView=()=>({grade:'mortal',category:'gu',page:0,message:'',query:'',rank:'all',sort:'default',selected:null,quantity:1});
+let shopView=newShopView();
+let shopReturnWarehouse=false;
+function resetShopView(){shopView=newShopView();shopReturnWarehouse=false;}
 function openShop(){
   if(gameState===GAME.BATTLE||upgradeState().battle)return false;
   if(!state.alive || gameState===GAME.ENDED){storageNotice('本世已经结束，无法进入宝黄天。');return false;}
+  if($('warehouse').classList.contains?.('hidden')===false&&warehouseView.origin==='screen-shop'){closeWarehouse();return true;}
+  shopReturnWarehouse=$('warehouse').classList.contains?.('hidden')===false;
   stopTimer();paused=true;warehouseResumeTimer=false;updateControls();
   $('warehouse').classList.add('hidden');$('activityPanel').classList.add('hidden');
   // 抉择与战斗中仍可浏览，但交易在结算完成前禁止。
   $('battlePanel').classList.add('hidden');
-  shopView={grade:'mortal',category:'gu',page:0,message:''};
+  shopView.message='';$('screen-shop').classList.remove('detail-open');
   $('shopReturnForge')?.classList.add('hidden');
   show('screen-shop');renderShop();return true;
 }
 function closeShop(){
+  if(shopReturnWarehouse){shopReturnWarehouse=false;returnWarehouse();return;}
   show('screen-play');renderStatus();updateControls();
   if(gameState===GAME.BATTLE && upgradeState().battle)renderBattle();
   // 返回人生后保持暂停，由玩家决定何时继续。
 }
 function shopSelectGrade(grade){
   if(!['mortal','immortal'].includes(grade) || grade==='immortal' && state.rank<6)return false;
-  shopView.grade=grade;shopView.category='gu';shopView.page=0;shopView.message='';renderShop();return true;
+  shopView.grade=grade;shopView.category='gu';shopView.rank='all';shopView.page=0;shopView.message='';shopView.selected=null;shopView.quantity=1;$('screen-shop').classList.remove('detail-open');renderShop();return true;
 }
 function shopSelectCategory(category){
   if(!Object.hasOwn(SHOP_CATEGORIES,category) || shopView.grade==='immortal' && category==='recipe')return false;
-  shopView.category=category;shopView.page=0;shopView.message='';renderShop();return true;
+  shopView.category=category;shopView.rank='all';shopView.page=0;shopView.message='';shopView.selected=null;shopView.quantity=1;$('screen-shop').classList.remove('detail-open');renderShop();return true;
 }
-function shopChangePage(offset){shopView.page+=offset;renderShop();}
+function shopChangePage(offset){shopView.page+=offset;shopView.selected=null;renderShop();}
+function shopFilter(key,value){if(!['query','rank','sort'].includes(key))return;shopView[key]=value;shopView.page=0;shopView.selected=null;renderShop();}
+function shopFiltered(){const goods=SHOP_GOODS.filter(g=>g.grade===shopView.grade&&g.category===shopView.category&&g.name.includes(shopView.query||'')&&(shopView.rank==='all'||guById(g.guId)?.rank===Number(shopView.rank)));if(shopView.sort==='priceAsc')goods.sort((a,b)=>a.price-b.price);if(shopView.sort==='priceDesc')goods.sort((a,b)=>b.price-a.price);return goods;}
+function selectShopGood(id){if(!shopFiltered().some(g=>g.id===id))return false;shopView.selected=id;shopView.quantity=1;$('screen-shop').classList.add('detail-open');renderShop();return true;}
+function shopQuantity(value){shopView.quantity=Number(value);renderShopDetail();}
+function shopBackToList(){$('screen-shop').classList.remove('detail-open');}
 function shopOwned(g){
   if(g.guId)return state.guItems.filter(x=>x.id===g.guId).length;
   if(g.recipeId)return recipeKnown(g.recipeId)?1:0;
@@ -63,14 +74,16 @@ function buyShopGood(id,quantity=1){
   return {ok:true,saved,message:message+(saved?'已保存。':'保存失败，请保持页面打开。')};
 }
 function uiBuyShopGood(id){
-  const quantity=Number($('shopQty_'+id)?.value||1),result=buyShopGood(id,quantity);
+  const quantity=(shopView.selected===id?shopView.quantity:Number($('shopQty_'+id)?.value||1)),result=buyShopGood(id,quantity);
   shopView.message=result.ok?result.message:result.reason;renderShop();renderStatus();
 }
 function renderShop(){
   ensureGuItems();const u=upgradeState();
-  if(state.rank<6 && shopView.grade==='immortal'){shopView.grade='mortal';shopView.category='gu';shopView.page=0;}
+  $('shopReturnMain').textContent=shopReturnWarehouse?'返回仓库':'返回人生';
+  if(state.rank<6 && shopView.grade==='immortal'){shopView.grade='mortal';shopView.category='gu';shopView.rank='all';shopView.page=0;}
   const immortal=shopView.grade==='immortal',currency=immortal?'仙元':'元石';
-  const goods=SHOP_GOODS.filter(g=>g.grade===shopView.grade && g.category===shopView.category);
+  const goods=shopFiltered();
+  $('shopSearch').value=shopView.query;$('shopRank').value=shopView.rank;$('shopRank').disabled=shopView.category!=='gu';$('shopSort').value=shopView.sort;
   const pages=Math.max(1,Math.ceil(goods.length/SHOP_PAGE_SIZE));
   shopView.page=Math.max(0,Math.min(pages-1,shopView.page));
   $('shopBalance').textContent='元石 '+state.money+(state.rank>=6?' · 仙元 '+u.immortalMoney:'');
@@ -82,15 +95,9 @@ function renderShop(){
   $('shopMessage').textContent=shopView.message;
   $('shopGrid').innerHTML=goods.slice(shopView.page*SHOP_PAGE_SIZE,(shopView.page+1)*SHOP_PAGE_SIZE).map(g=>{
     const issue=shopBuyIssue(g,1),owned=shopOwned(g);
-    return '<article class="shop-card"><div class="shop-card-kind">'+SHOP_CATEGORIES[g.category]+'</div><h2>'+escapeM4Text(g.name)+'</h2><p class="shop-desc">'+escapeM4Text(g.desc)+'</p><p>持有 '+owned+g.unit+'</p><p class="shop-price">'+g.price+' '+currency+' <small>/ '+g.amount+g.unit+'</small></p>'+
-      '<div class="shop-buy"><label>数量 <select id="shopQty_'+g.id+'" aria-label="'+g.name+'购买份数">'+(g.unique?[1]:[1,5,10]).map(n=>'<option value="'+n+'">'+n+'</option>').join('')+'</select></label><button onclick="uiBuyShopGood(\''+g.id+'\')" '+(issue?'disabled':'')+'>'+(issue?escapeM4Text(issue):'购买')+'</button></div></article>';
+    return '<article class="shop-card '+(shopView.selected===g.id?'selected':'')+'"><small>'+SHOP_CATEGORIES[g.category]+(g.guId?' · '+guById(g.guId).rank+'转':'')+'</small><h2>'+escapeM4Text(g.name)+'</h2><p class="shop-desc">'+escapeM4Text(g.guId?guUseLabel(guById(g.guId)):g.category==='recipe'?'学习配方或补全记忆':g.desc)+'</p><p>持有 '+owned+g.unit+'</p><p class="shop-price">'+g.price+' '+currency+' / '+g.amount+g.unit+'</p><button onclick="selectShopGood(\''+g.id+'\')">查看详情</button></article>';
   }).join('') || '<p>此分类暂无商品。</p>';
   $('shopPage').textContent=(shopView.page+1)+' / '+pages;
   $('shopPrev').disabled=shopView.page===0;$('shopNext').disabled=shopView.page===pages-1;
-  renderShopInventory();
-}
-function renderShopInventory(){
-  const target=$('warehouseShopStock');if(!target)return;
-  const goods=SHOP_GOODS.filter(g=>!g.guId&&!g.recipeId&&!g.stock && shopOwned(g)>0);
-  target.innerHTML='<h3>宝黄天物资与野兽</h3>'+(goods.length?'<div class="shop-stock-grid">'+goods.map(g=>'<div><strong>'+g.name+'</strong><p>'+shopOwned(g)+g.unit+' · '+(g.grade==='immortal'?'仙级':'凡级')+'</p></div>').join('')+'</div>':'<p>暂无额外物资。购入的蛊虫、普通食物和材料显示在仓库对应位置。</p>')+'<p>野兽当前可购买、收藏；尚未接入驭兽战斗。仙材和仙级食料可储备，具体用途以已开放玩法为准。</p>';
+  renderShopDetail();
 }

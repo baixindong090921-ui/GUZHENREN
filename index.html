@@ -73,51 +73,48 @@
   </aside>
 </div>
 
-<section class="screen shop-screen hidden" id="screen-catalog" aria-label="蛊虫与材料图鉴">
+<section class="screen shop-screen workspace-page hidden" id="screen-catalog" aria-label="蛊虫与材料图鉴">
 <header class="shop-header"><div><h1>蛊虫与材料图鉴</h1><p id="catalogCount"></p></div><button onclick="closeCatalog()">返回</button></header>
 <p>收录名称与已核实设定。待核实条目不出售、不开放使用；已收录不代表拥有。价格、食量和回合数值属于游戏设定。</p>
-<div class="catalog-controls"><label>查找 <input type="search" id="catalogSearch" placeholder="名称、别名或用途" oninput="catalogFilter('query',this.value)"></label><label>类别 <select id="catalogKind" onchange="catalogFilter('kind',this.value)"><option value="gu">蛊虫</option><option value="material">材料与食料</option></select></label><label>状态 <select id="catalogStatus" onchange="catalogFilter('status',this.value)"><option value="all">全部</option><option value="available">已接入</option><option value="pending">待核实 / 待接入</option></select></label></div>
-<div class="shop-grid" id="catalogGrid"></div><div class="shop-pagination"><button id="catalogPrev" onclick="catalogPage(-1)">上一页</button><span id="catalogPage"></span><button id="catalogNext" onclick="catalogPage(1)">下一页</button></div>
+<div class="workspace-layout catalog-layout"><aside class="workspace-sidebar"><h2>检索条件</h2><div class="catalog-controls"><label>查找 <input type="search" id="catalogSearch" placeholder="名称、别名或用途" oninput="catalogFilter('query',this.value)"></label><label>类别 <select id="catalogKind" onchange="catalogFilter('kind',this.value)"><option value="gu">蛊虫</option><option value="material">材料与食料</option></select></label><label>状态 <select id="catalogStatus" onchange="catalogFilter('status',this.value)"><option value="all">全部</option><option value="available">已接入</option><option value="pending">待核实 / 待接入</option></select></label></div>
+<label>转数 <select id="catalogRank" onchange="catalogFilter('rank',this.value)"><option value="all">全部转数</option><option value="unknown">待核实</option><option value="1">1转</option><option value="2">2转</option><option value="3">3转</option><option value="4">4转</option><option value="5">5转</option><option value="6">6转</option><option value="7">7转</option><option value="8">8转</option><option value="9">9转</option></select></label><label>用途 <select id="catalogRole" onchange="catalogFilter('role',this.value)"><option value="all">全部用途</option><option>攻击</option><option>防御</option><option>治疗</option><option>辅助</option><option>材料</option><option>储存</option><option>控制</option></select></label></aside><section class="workspace-results"><div class="shop-grid" id="catalogGrid"></div><div class="shop-pagination"><button id="catalogPrev" onclick="catalogPage(-1)">上一页</button><span id="catalogPage"></span><button id="catalogNext" onclick="catalogPage(1)">下一页</button></div></section><aside class="workspace-detail" id="catalogDetail" aria-live="polite"></aside></div>
 </section>
 
 <!-- 宝黄天：与人生页同级的独立页面，不使用遮罩或弹窗。 -->
-<section class="screen forge-screen hidden" id="screen-forge" aria-label="炼蛊坊">
-  <header class="forge-header"><div><p class="shop-eyebrow">择材入炉 · 炼蛊求真</p><h1>炼蛊坊</h1><p id="forgeBalance"></p></div><div class="forge-actions"><button onclick="openForgeShop()">宝黄天补货</button><button onclick="openWarehouse()">查看仓库</button><button onclick="closeForge()">返回人生</button></div></header>
+<section class="screen forge-screen workspace-page hidden" id="screen-forge" aria-label="炼蛊坊">
+  <header class="forge-header"><div><p class="shop-eyebrow">择材入炉 · 炼蛊求真</p><h1>炼蛊坊</h1><p id="forgeBalance"></p></div><div class="forge-actions"><button onclick="openForgeShop()">宝黄天补货</button><button onclick="openWarehouse()">查看仓库</button><button id="forgeReturnMain" onclick="closeForge()">返回人生</button></div></header>
   <p id="forgeMessage" role="status" aria-live="polite"></p>
   <div class="forge-layout">
-    <section class="forge-inventory forge-card" aria-label="材料仓库"><h2>材料仓库</h2><p class="forge-hint">勾选具体蛊虫，或填写材料份数。准备时不扣除库存。</p><div class="forge-tabs"><button id="forgeGuTab" onclick="forgeSelectCategory('gu')">蛊虫</button><button id="forgeMaterialTab" onclick="forgeSelectCategory('material')">材料</button></div><input class="forge-search" type="search" aria-label="查找材料" placeholder="按名称查找" oninput="forgeSearch(this.value)"><div id="forgeInventory"></div></section>
-    <section class="forge-furnace forge-card" aria-label="炼炉"><h2>本次炼炉</h2><div id="forgeInputs"></div><div id="forgeRisk"></div><p id="forgeIssue" class="forge-warning"></p><button class="primary" id="forgeBegin" onclick="prepareForge()">检查投入与风险</button><div id="forgeConfirm" aria-live="polite"></div><div id="forgeResult" aria-live="polite"></div></section>
     <aside class="forge-recipes forge-card" aria-label="配方册"><h2>配方册</h2><div id="forgeRecipe"></div></aside>
+    <section class="forge-furnace forge-card" aria-label="炼炉"><h2>本次炼炉</h2><div id="forgeInputs"></div><div id="forgeRisk"></div><p id="forgeIssue" class="forge-warning"></p><button class="primary" id="forgeBegin" onclick="prepareForge()">检查投入与风险</button><div id="forgeConfirm" aria-live="polite"></div><div id="forgeResult" aria-live="polite"></div></section>
+    <section class="forge-inventory forge-card" aria-label="材料仓库"><h2>材料仓库</h2><p class="forge-hint">勾选具体蛊虫，或填写材料份数。准备时不扣除库存。</p><div class="forge-tabs"><button id="forgeGuTab" onclick="forgeSelectCategory('gu')">蛊虫</button><button id="forgeMaterialTab" onclick="forgeSelectCategory('material')">材料</button></div><input id="forgeSearch" class="forge-search" type="search" aria-label="查找材料" placeholder="按名称查找" oninput="forgeSearch(this.value)"><div id="forgeInventory"></div></section>
+
   </div>
 </section>
-<section class="screen shop-screen hidden" id="screen-shop" aria-label="宝黄天">
+<section class="screen shop-screen workspace-page hidden" id="screen-shop" aria-label="宝黄天">
   <button id="shopReturnForge" class="hidden" onclick="openForge()">返回炼蛊坊（保留投料）</button>
-  <header class="shop-header"><div><p class="shop-eyebrow">万物可易 · 各取所需</p><h1>宝黄天</h1><p id="shopBalance"></p></div><div class="shop-header-actions"><button onclick="openWarehouse()">查看仓库</button><button onclick="closeShop()">返回人生</button></div></header>
-  <nav class="shop-grades" id="shopGrades" aria-label="交易分区"></nav>
+  <header class="shop-header"><div><p class="shop-eyebrow">万物可易 · 各取所需</p><h1>宝黄天</h1><p id="shopBalance"></p></div><div class="shop-header-actions"><button onclick="openWarehouse()">查看仓库</button><button id="shopReturnMain" onclick="closeShop()">返回人生</button></div></header>
+  <div class="workspace-layout market-layout"><aside class="workspace-sidebar"><h2>交易分区</h2><nav class="shop-grades" id="shopGrades" aria-label="交易分区"></nav>
   <nav class="shop-categories" id="shopCategories" aria-label="商品分类"></nav>
-  <p id="shopIntro"></p>
+  </aside><section class="workspace-results"><div class="workspace-filters"><input id="shopSearch" type="search" aria-label="搜索商品" placeholder="搜索商品名称" oninput="shopFilter('query',this.value)"><select id="shopRank" aria-label="商品转数" onchange="shopFilter('rank',this.value)"><option value="all">全部转数</option><option value="1">1转</option><option value="2">2转</option><option value="3">3转</option><option value="4">4转</option><option value="5">5转</option><option value="6">6转</option><option value="7">7转</option><option value="8">8转</option><option value="9">9转</option></select><select id="shopSort" aria-label="商品排序" onchange="shopFilter('sort',this.value)"><option value="default">默认顺序</option><option value="priceAsc">价格从低到高</option><option value="priceDesc">价格从高到低</option></select></div><p id="shopIntro"></p>
   <p id="shopMessage" class="shop-message" role="status" aria-live="polite"></p>
   <div class="shop-grid" id="shopGrid"></div>
   <div class="shop-pagination"><button id="shopPrev" onclick="shopChangePage(-1)">上一页</button><span id="shopPage"></span><button id="shopNext" onclick="shopChangePage(1)">下一页</button></div>
-  <p class="shop-footnote">购买后收入仓库。浏览期间时间暂停，返回人生后可继续推进。</p>
+  </section><aside class="workspace-detail" id="shopDetail" aria-live="polite"></aside></div><p class="shop-footnote">购买后收入仓库。浏览期间时间暂停，返回人生后可继续推进。</p>
 </section>
 
-<!-- ============ 蛊虫仓库（5×6 网格） ============ -->
-<div class="overlay hidden" id="warehouse">
-  <div class="warehouse-panel">
-    <div class="sec">蛊虫仓库</div>
-    <div class="controls warehouse-nav" style="align-items:center">
-      <button id="warehousePrev" onclick="warehousePrev()">上一页</button>
-      <span class="font-mono" id="warehousePage"></span>
-      <button id="warehouseNext" onclick="warehouseNext()">下一页</button>
-      <button onclick="closeWarehouse()">关闭</button>
-    </div>
-    <div class="warehouse-grid" id="warehouseGrid"></div>
-    <div id="warehouseFood"></div>
-    <div id="warehouseRecipes"></div>
-    <div id="warehouseShopStock"></div>
-  </div>
-</div>
+<!-- ============ 独立仓库与供养预览 ============ -->
+<section class="screen shop-screen workspace-page hidden" id="warehouse" aria-label="仓库">
+ <header class="shop-header"><div><p class="shop-eyebrow">藏蛊 · 备粮 · 炼材</p><h1>仓库</h1><p id="warehouseSummary"></p></div><div class="detail-actions"><button onclick="openShop()">宝黄天</button><button onclick="openForge()">炼蛊坊</button><button id="warehouseReturn" onclick="closeWarehouse()">返回人生</button></div></header>
+ <nav class="warehouse-tabs" aria-label="仓库视图"><button id="warehouseInventoryTab" onclick="warehouseTab('inventory')">库存</button><button id="warehouseFeedingTab" onclick="warehouseTab('feeding')">供养与缺粮</button></nav>
+ <div class="workspace-layout warehouse-layout" id="warehouseInventory">
+  <aside class="workspace-sidebar"><h2>物品分类</h2><nav class="shop-categories" id="warehouseCategories"></nav><label>仙凡分类<select id="warehouseGrade" onchange="warehouseFilter('grade',this.value)"><option value="all">全部品级</option><option value="mortal">凡级</option><option value="immortal">仙级</option><option value="unknown">待核实</option></select></label><label>蛊虫状态<select id="warehouseStatus" onchange="warehouseFilter('status',this.value)"><option value="all">全部状态</option><option value="active">供养中</option><option value="idle">闲置</option><option value="hungry">饥饿</option></select></label><p>这里只显示已持有物品。未知旧档名称保留，资料不足时不开放使用。</p></aside>
+  <section class="workspace-results"><div class="workspace-filters"><input id="warehouseSearch" type="search" aria-label="搜索库存" placeholder="名称、流派或用途" oninput="warehouseFilter('query',this.value)"></div><p id="warehouseCount"></p><div id="warehouseGrid"></div><div class="shop-pagination"><button id="warehousePrev" onclick="warehousePrev()">上一页</button><span id="warehousePage"></span><button id="warehouseNext" onclick="warehouseNext()">下一页</button></div></section>
+  <aside class="workspace-detail" id="warehouseDetail" aria-live="polite"></aside>
+ </div>
+ <section id="warehouseFood" class="warehouse-feeding hidden" aria-label="供养与缺粮"></section>
+ <p>浏览期间时间暂停。操作针对单只蛊；食料补货前往宝黄天，由你确认购买。</p>
+</section>
 
 <!-- ============ 死亡抉择 / 继承面板（重生系统） ============ -->
 <div class="overlay hidden" id="deathPanel">
@@ -158,6 +155,8 @@
 <script src="engine/shop.js"></script>
 <script src="engine/forge-page.js"></script>
 <script src="engine/catalog.js"></script>
+<script src="engine/workspace-ui.js"></script>
+<script src="engine/warehouse.js"></script>
 
 <script>
 $('btnPause').onclick = togglePause;

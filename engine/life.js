@@ -21,7 +21,7 @@ const $ = id => document.getElementById(id);
 
 /* ---------- 屏幕切换 ---------- */
 function show(id){
-  ['screen-start','screen-gupick','screen-alloc','screen-play','screen-shop','screen-forge','screen-catalog','battlePanel'].forEach(s => $(s)?.classList.add('hidden'));
+  ['screen-start','screen-gupick','screen-alloc','screen-play','screen-shop','screen-forge','screen-catalog','warehouse','battlePanel'].forEach(s => $(s)?.classList.add('hidden'));
   $(id).classList.remove('hidden');
 }
 
@@ -471,48 +471,3 @@ function updateControls(){
   $('btnNext').disabled = (gameState === GAME.ENDED || gameState === GAME.CHOOSING || gameState === GAME.BATTLE);
 }
 
-/* ============ 蛊虫仓库（5×6 网格，每页 30 格，超出翻页） ============ */
-const WAREHOUSE_PAGE_SIZE = 30;
-function openWarehouse(){
-  if(gameState===GAME.BATTLE || gameState===GAME.ENDED)return;
-  warehouseResumeTimer = gameState===GAME.RUNNING && !paused;
-  stopTimer();
-  warehousePage = 0;
-  renderWarehouse();
-  $('warehouse').classList.remove('hidden');
-}
-function closeWarehouse(){
-  $('warehouse').classList.add('hidden');
-  if(typeof renderShop==='function' && $('screen-shop')?.classList.contains?.('hidden')===false)renderShop();
-  if(typeof renderForge==='function' && $('screen-forge')?.classList.contains?.('hidden')===false)renderForge();
-  if (warehouseResumeTimer && gameState===GAME.RUNNING && !paused) startTimer();
-  warehouseResumeTimer = false;
-}
-function warehousePrev(){ if (warehousePage > 0){ warehousePage--; renderWarehouse(); } }
-function warehouseNext(){ warehousePage++; renderWarehouse(); }
-function renderWarehouse(){
-  ensureGuItems();
-  const guList = state.guItems.concat(state.unknownGu.map(name=>({unknownName:name})));
-  const totalPages = Math.max(1, Math.ceil(guList.length / WAREHOUSE_PAGE_SIZE));
-  if (warehousePage >= totalPages) warehousePage = totalPages - 1;
-  const start = warehousePage * WAREHOUSE_PAGE_SIZE;
-  const pageGu = guList.slice(start, start + WAREHOUSE_PAGE_SIZE);
-  let html = '';
-  for (let i = 0; i < WAREHOUSE_PAGE_SIZE; i++){
-    const item = pageGu[i], gu = item && guById(item.id);
-    const name = gu?.name || item?.unknownName || '';
-    const food = gu && FOODS.find(f=>f.id===gu.foodId);
-    html += `<div class="gu-cell${name ? ' filled' : ''}">
-      <div class="gu-cell-img"></div>
-      <div class="gu-cell-name">${escapeM4Text(name)}</div>
-      ${gu ? `<small>${gu.rank}转 · ${gu.流派}</small><small>${food ? '食物：'+food.name : (gu.id===60?'特殊喂养规则':'食物待核实，暂不结算')}</small><small>${item.active ? item.missed ? '饥饿' : '供养中' : '仓库中'}</small>${M4_EXTRA.uses[gu.id]?`<small>用途：${escapeM4Text(M4_EXTRA.uses[gu.id].title)}</small><button onclick="useGuAction(${gu.id},${item.uid})" ${m4ActionReady()&&item.active&&item.missed===0&&!item.locked&&canUseGuAction(gu.id)?'':'disabled'}>催动</button>`:''}<button onclick="toggleGuFeeding(${item.uid})" ${!item.active&&gu.available===false?'disabled':''}>${item.active ? '停止供养' : '加入供养'}</button>` : name ? '<small>旧档未识别，已保留</small>' : ''}
-    </div>`;
-  }
-  $('warehouseGrid').innerHTML = html;
-  $('warehousePage').textContent = `${warehousePage + 1} / ${totalPages}`;
-  $('warehousePrev').disabled = (warehousePage <= 0);
-  $('warehouseNext').disabled = (warehousePage >= totalPages - 1);
-  renderM4Panels();
-  if(typeof renderShopInventory==='function')renderShopInventory();
-
-}

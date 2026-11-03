@@ -11,7 +11,7 @@ function newUpgradeState(){
     marketBought:[],marketPeriod:null,treasureBought:[],rewarded:[],shopStock:{},
     forgeDraft:{uids:[],materials:{},target:''},forgeResult:null,battleResult:null};
 }
-function initUpgrade(){state.upgrade=newUpgradeState();if(typeof resetForgeView==='function')resetForgeView();}
+function initUpgrade(){state.upgrade=newUpgradeState();if(typeof resetShopView==='function')resetShopView();if(typeof resetWarehouseView==='function')resetWarehouseView();if(typeof resetForgeView==='function')resetForgeView();}
 function upgradeState(){if(!state.upgrade)initUpgrade();return state.upgrade;}
 function loadUpgrade(raw,resources=state.resources){
   const u=newUpgradeState();

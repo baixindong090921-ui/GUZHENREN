@@ -88,12 +88,23 @@ function usableGuItem(id){
   ensureGuItems();
   return state.guItems.find(x=>x.id===Number(id) && x.active && x.missed===0 && !x.locked) || null;
 }
-function toggleGuFeeding(uid){
-  if(gameState===GAME.BATTLE||!state.alive)return false;
-  ensureGuItems();
+function feedingIssue(uid){
+  if(!state.alive||gameState===GAME.ENDED)return '本世已经结束';
+  if(typeof saveReadBlocked!=='undefined'&&saveReadBlocked)return '存档异常尚未处理';
+  if(gameState===GAME.BATTLE||state.upgrade?.battle)return '战斗结束后才能调整供养';
+  if(gameState===GAME.CHOOSING)return '请先返回人生完成当前抉择';
   const item=state.guItems.find(x=>x.uid===Number(uid));
-  if (!item || item.locked || !item.active&&guById(item.id)?.available===false) return false;
-  if (!item.active && state.guItems.filter(x=>x.active).length >= M4.slots(state.attrs.家境)) return false;
+  if(!item)return '这只蛊已不在仓库';
+  if(item.locked)return '这只蛊已被占用';
+  if(state.upgrade?.forgeDraft?.uids.includes(item.uid))return '已投入炼炉，请先在炼蛊坊撤回';
+  if(!item.active&&guById(item.id)?.available===false)return '资料待核实，暂不开放供养';
+  if(!item.active&&state.guItems.filter(x=>x.active).length>=M4.slots(state.attrs.家境))return '供养位已满，请先停止供养其他蛊虫';
+  return '';
+}
+function toggleGuFeeding(uid){
+  ensureGuItems();
+  if(feedingIssue(uid))return false;
+  const item=state.guItems.find(x=>x.uid===Number(uid));
   item.active=!item.active;
   saveGame(); renderWarehouse(); renderStatus();
   return true;
@@ -250,27 +261,4 @@ function recipeAvailability(recipe,useOptional=false){
   if ((recipe.materials||[]).some(m=>safeCount(state.materialStock[m.id])<m.count))return '炼制材料不足';
   if (recipeInputs(recipe).some(x=>x.items.length<x.req.count)) return '蛊虫材料不足';
   return '';
-}
-function renderM4Panels(){
-  const foodPanel=document.getElementById('warehouseFood');
-  const recipesPanel=document.getElementById('warehouseRecipes');
-  if (!foodPanel || !recipesPanel) return;
-  refreshM4Market();
-  const demand={};
-  for (const item of state.guItems){
-    const food=FOODS.find(f=>f.id===guById(item.id)?.foodId);
-    if (item.active && food) demand[food.id]=(demand[food.id]||0)+food.amount;
-  }
-  const needs=FOODS.filter(f=>demand[f.id]).map(f=>f.name+' '+demand[f.id]+' '+f.unit).join('、') || '无';
-  const shortages=FOODS.filter(f=>demand[f.id]>safeCount(state.foodStock[f.id])).map(f=>f.name).join('、') || '无';
-  foodPanel.innerHTML='<h3>食物与补给</h3><p>供养位 '+state.guItems.filter(x=>x.active).length+'/'+M4.slots(state.attrs.家境)+' · 元石 '+state.money+'。每月仅扣正在供养的蛊虫。</p>'+
-    '<p>下月需求：'+needs+'；当前不足：'+shortages+'。</p>'+
-    '<h3>获取蛊虫</h3><p>野外寻蛊每 30 日一次，消耗 8% 体力；本年已捕获 '+state.m4CaptureCount+'/'+M4_EXTRA.captureYearCap+'。蛊市每月刷新。</p>'+
-    '<div class="m4-row"><button onclick="exploreForGu()" '+(!m4ActionReady() || state.resources.体力<state.resourceMax.体力*M4_EXTRA.exploreCost || state.m4CaptureYear===state.age && state.m4CaptureCount>=M4_EXTRA.captureYearCap || state.m4ExploreDay!==null && gameDayNumber()-state.m4ExploreDay<M4_EXTRA.exploreCooldown?'disabled':'')+'>野外寻蛊</button></div>'+
-    state.m4MarketIds.map(id=>'<div class="m4-row"><span>'+escapeM4Text(guById(id).name)+' · '+M4_EXTRA.prices[id]+' 元石</span><button onclick="buyCommonGu('+id+')" '+(!m4ActionReady() || state.money<M4_EXTRA.prices[id] || state.m4MarketBought.includes(id)?'disabled':'')+'>'+(state.m4MarketBought.includes(id)?'本月已购':'购买')+'</button></div>').join('')+
-    '<p>永久气力：黑豕 '+state.m4Strength.black+' 层 · 白豕 '+state.m4Strength.white+' 层（每类最多 '+M4_EXTRA.strengthCap+' 层）</p>'+
-    FOODS.filter(f=>f.available!==false).map(f=>`<div class="m4-row"><span>${f.name}：${safeCount(state.foodStock[f.id])} ${f.unit}</span><button onclick="buyFood('${f.id}')" ${(f.grade==='immortal'?(state.rank<6||upgradeState().immortalMoney<f.price):state.money<f.price)?'disabled':''}>购入 ${f.amount}${f.unit} · ${f.price}${f.grade==='immortal'?'仙元':'元石'}</button></div>`).join('')+
-    '<h3>合炼输入蛊</h3>'+Object.entries(MATERIAL_GU_PRICES).map(([id,price])=>`<div class="m4-row"><span>${guById(id).name} · ${state.guItems.filter(x=>x.id===Number(id)).length} 只</span><button onclick="buyMaterialGu(${id})" ${state.money<price?'disabled':''}>购入 · ${price}元石</button></div>`).join('')+
-    MATERIALS.filter(m=>m.available!==false).map(m=>`<div class="m4-row"><span>${m.name}：${safeCount(state.materialStock[m.id])}</span><button onclick="buyMaterial('${m.id}')" ${state.money<m.price?'disabled':''}>购入 · ${m.price}元石</button></div>`).join('');
-  if(typeof renderForgeEntry==='function')renderForgeEntry();
 }

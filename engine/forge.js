@@ -77,6 +77,4 @@ function uiInfer(attempt=false){
   if(typeof confirm==='function'&&!confirm('推演需一天。'+soulRiskText(UPGRADE.inferSoul)))return;
   const r=inferRecipe(attempt);if(state.alive){activityMessage(!r.ok?r.reason:r.success?'推演成功，蛊方知识已补全。':'本次推演未取得完整蛊方。');renderActivities();}
 }
-function renderForgeEntry(){
-  $('warehouseRecipes').innerHTML='<h3>炼蛊与配方</h3><p>投入材料、参考配方，确认风险后炼制。</p><button onclick="openActivities(\'forge\')">进入炼蛊坊</button>';
-}
+
